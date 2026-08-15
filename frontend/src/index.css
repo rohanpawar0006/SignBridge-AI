@@ -1,0 +1,294 @@
+/* ==========================================================================
+   SignBridge AI — Design System Stylesheet
+   Tokens and specifications strictly matching Design.md
+   ========================================================================== */
+
+:root {
+  /* Core Palette Tokens */
+  --ink: #12141c;
+  --panel: #191c28;
+  --panel-elevated: #1f2333;
+  --panel-subtle: #151824;
+  --line: #2b2f40;
+  --line-light: #3d435c;
+  
+  /* Mode & Brand Accents */
+  --teal: #2dd6c0;
+  --teal-glow: rgba(45, 214, 192, 0.18);
+  --teal-subtle: rgba(45, 214, 192, 0.08);
+  
+  --amber: #f6ac3f;
+  --amber-glow: rgba(246, 172, 63, 0.18);
+  --amber-subtle: rgba(246, 172, 63, 0.08);
+  
+  --coral: #ff6a5b;
+  --coral-glow: rgba(255, 106, 91, 0.22);
+  --coral-subtle: rgba(255, 106, 91, 0.08);
+  
+  /* Text & Tone Tokens */
+  --mist: #8c93ab;
+  --mist-light: #b4bacf;
+  --white: #f5f6fb;
+  
+  /* Typography Families */
+  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  
+  /* Layout & Sizing */
+  --max-width: 1120px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-pill: 9999px;
+  
+  /* Transitions */
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+}
+
+/* Reset & Base Setup */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background-color: var(--ink);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--ink);
+  color: var(--white);
+  overflow-x: hidden;
+}
+
+/* Typography Hierarchy */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  color: var(--white);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: clamp(38px, 6vw, 68px);
+}
+
+h2 {
+  font-size: clamp(26px, 3.4vw, 38px);
+}
+
+h3 {
+  font-size: clamp(20px, 2.2vw, 26px);
+  font-weight: 600;
+}
+
+p {
+  color: var(--mist);
+  font-size: clamp(15px, 1.1vw, 16.5px);
+  line-height: 1.65;
+}
+
+.mono-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mist);
+}
+
+.mono-data {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+/* Links and Interactive Elements */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--white);
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+/* Accessibility Focus Ring Standards */
+:focus-visible {
+  outline: 2px solid var(--coral);
+  outline-offset: 3px;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--coral);
+  outline-offset: 2px;
+}
+
+/* Common Layout Containers */
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 16px;
+  }
+}
+
+.section-divider {
+  border-top: 1px solid var(--line);
+  padding-top: 88px;
+  padding-bottom: 88px;
+}
+
+@media (max-width: 768px) {
+  .section-divider {
+    padding-top: 56px;
+    padding-bottom: 56px;
+  }
+}
+
+/* Card & Surface Defaults */
+.card-panel {
+  background-color: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--duration-normal) var(--ease-standard);
+}
+
+.card-panel:hover {
+  border-color: var(--line-light);
+}
+
+/* Pill Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  background-color: var(--panel-elevated);
+  border: 1px solid var(--line);
+  color: var(--mist-light);
+}
+
+.badge-teal {
+  background: var(--teal-subtle);
+  border-color: rgba(45, 214, 192, 0.3);
+  color: var(--teal);
+}
+
+.badge-amber {
+  background: var(--amber-subtle);
+  border-color: rgba(246, 172, 63, 0.3);
+  color: var(--amber);
+}
+
+.badge-coral {
+  background: var(--coral-subtle);
+  border-color: rgba(255, 106, 91, 0.3);
+  color: var(--coral);
+}
+
+/* Buttons */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: var(--coral);
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 15px;
+  border: 1px solid transparent;
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.btn-primary:hover {
+  background-color: #ff5543;
+  box-shadow: 0 4px 20px var(--coral-glow);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: var(--panel-elevated);
+  color: var(--white);
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 15px;
+  border: 1px solid var(--line);
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.btn-secondary:hover {
+  border-color: var(--line-light);
+  background-color: #24293c;
+}
+
+.btn-teal {
+  background-color: var(--teal);
+  color: #0b221e;
+  font-weight: 600;
+}
+
+.btn-teal:hover {
+  background-color: #38e2cc;
+  box-shadow: 0 4px 16px var(--teal-glow);
+}
+
+.btn-amber {
+  background-color: var(--amber);
+  color: #2b1d06;
+  font-weight: 600;
+}
+
+.btn-amber:hover {
+  background-color: #fabc5c;
+  box-shadow: 0 4px 16px var(--amber-glow);
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

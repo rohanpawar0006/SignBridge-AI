@@ -1,0 +1,485 @@
+import React, { useState, useEffect, useRef } from 'react';
+
+// ISL Visual Sign Details & Pedagogical motion paths for the 11 v1 vocabulary signs
+const SIGN_VISUAL_GUIDES = {
+  I: {
+    emoji: '👉',
+    motion: 'Index finger points inwards towards center chest',
+    direction: 'Inward / Center',
+    handshape: 'Single Point (G-handshape)',
+    iconBg: 'rgba(45, 214, 192, 0.15)',
+    accent: '#2dd6c0'
+  },
+  WANT: {
+    emoji: '🤲',
+    motion: 'Both hands held open palms up, pulling toward chest with fingers curving',
+    direction: 'Pull Inward',
+    handshape: 'Open to Claw shape',
+    iconBg: 'rgba(246, 172, 63, 0.15)',
+    accent: '#f6ac3f'
+  },
+  WATER: {
+    emoji: '💧',
+    motion: 'Three middle fingers spread (W-hand) tapping chin or mouth twice',
+    direction: 'Tap Mouth Twice',
+    handshape: 'W-Handshape',
+    iconBg: 'rgba(45, 214, 192, 0.15)',
+    accent: '#2dd6c0'
+  },
+  HELP: {
+    emoji: '🤝',
+    motion: 'Thumbs-up fist rests on flat left palm, both hands lift upward together',
+    direction: 'Lift Upward',
+    handshape: 'Fist on Flat Palm',
+    iconBg: 'rgba(255, 106, 91, 0.15)',
+    accent: '#ff6a5b'
+  },
+  'THANK YOU': {
+    emoji: '🙏',
+    motion: 'Flat open hand touches chin/lips and extends forward and outward toward person',
+    direction: 'Chin to Forward',
+    handshape: 'Flat Palm',
+    iconBg: 'rgba(45, 214, 192, 0.15)',
+    accent: '#2dd6c0'
+  },
+  YES: {
+    emoji: '👍',
+    motion: 'Closed fist with thumb extended nodding up and down from the wrist like a head nod',
+    direction: 'Nodding Downward',
+    handshape: 'Thumbs-up Fist',
+    iconBg: 'rgba(45, 214, 192, 0.15)',
+    accent: '#2dd6c0'
+  },
+  NO: {
+    emoji: '✋',
+    motion: 'Index and middle fingers snap down onto thumb or side-to-side head/hand shake',
+    direction: 'Snap Down / Shake',
+    handshape: 'Two Fingers to Thumb',
+    iconBg: 'rgba(255, 106, 91, 0.15)',
+    accent: '#ff6a5b'
+  },
+  PLEASE: {
+    emoji: '💫',
+    motion: 'Flat right palm rubs in a smooth clockwise circular motion over the heart/chest',
+    direction: 'Circular Chest Rub',
+    handshape: 'Flat Open Hand',
+    iconBg: 'rgba(246, 172, 63, 0.15)',
+    accent: '#f6ac3f'
+  },
+  HELLO: {
+    emoji: '👋',
+    motion: 'Open hand waves outward or begins near temple moving outward in a salute greeting',
+    direction: 'Wave Outward',
+    handshape: 'Open Palm Salute',
+    iconBg: 'rgba(45, 214, 192, 0.15)',
+    accent: '#2dd6c0'
+  },
+  FRIEND: {
+    emoji: '🤞',
+    motion: 'Index fingers curved into hooks and interlocked together once, then flipped and interlocked again',
+    direction: 'Interlock Hooks Twice',
+    handshape: 'Hooked Index Fingers',
+    iconBg: 'rgba(246, 172, 63, 0.15)',
+    accent: '#f6ac3f'
+  },
+  FOOD: {
+    emoji: '🍲',
+    motion: 'All fingertips pinched together in a cluster (O-hand), tapping mouth repeatedly',
+    direction: 'Tap Mouth',
+    handshape: 'Pinch Cluster',
+    iconBg: 'rgba(246, 172, 63, 0.15)',
+    accent: '#f6ac3f'
+  }
+};
+
+export default function ClipPlayer({
+  tokens = [],
+  activeTokenIndex = 0,
+  onActiveTokenChange = () => {},
+  isPlaying = false,
+  onPlayStateChange = () => {}
+}) {
+  const [speed, setSpeed] = useState(1.0); // 1.0 (Normal) | 0.6 (Slow Mode)
+  const [isLooping, setIsLooping] = useState(false);
+  const [progress, setProgress] = useState(0); // 0 to 100%
+  const [fingerspellLetterIdx, setFingerspellLetterIdx] = useState(0);
+
+  const videoRef = useRef(null);
+  const timerRef = useRef(null);
+  const progressTimerRef = useRef(null);
+
+  const currentToken = tokens[activeTokenIndex] || null;
+
+  // Handle Token Sequential Progression
+  useEffect(() => {
+    if (!isPlaying || tokens.length === 0 || !currentToken) {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+      return;
+    }
+
+    // Base duration adjusted by playback speed
+    const baseDuration = (currentToken.duration || 1.5) * 1000;
+    const adjustedDuration = baseDuration / speed;
+    const startTime = Date.now();
+
+    // Progress bar tick
+    setProgress(0);
+    setFingerspellLetterIdx(0);
+
+    if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+    progressTimerRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min(100, (elapsed / adjustedDuration) * 100);
+      setProgress(pct);
+
+      // If fingerspelling, step through letters
+      if (currentToken.type === 'fingerspell' && currentToken.letters) {
+        const letterTime = adjustedDuration / currentToken.letters.length;
+        const currentLIdx = Math.min(
+          currentToken.letters.length - 1,
+          Math.floor(elapsed / letterTime)
+        );
+        setFingerspellLetterIdx(currentLIdx);
+      }
+    }, 50);
+
+    // Timeout to advance to next token
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      if (activeTokenIndex < tokens.length - 1) {
+        onActiveTokenChange(activeTokenIndex + 1);
+      } else {
+        // Reached end of sequence
+        if (isLooping) {
+          onActiveTokenChange(0);
+        } else {
+          onPlayStateChange(false);
+          setProgress(100);
+        }
+      }
+    }, adjustedDuration);
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+    };
+  }, [isPlaying, activeTokenIndex, tokens, speed, isLooping, currentToken]);
+
+  // Controls
+  const togglePlay = () => {
+    if (tokens.length === 0) return;
+    if (!isPlaying && activeTokenIndex >= tokens.length - 1 && progress >= 100) {
+      // Restart from beginning
+      onActiveTokenChange(0);
+      setProgress(0);
+    }
+    onPlayStateChange(!isPlaying);
+  };
+
+  const handleRestart = () => {
+    onActiveTokenChange(0);
+    setProgress(0);
+    onPlayStateChange(true);
+  };
+
+  const handlePrev = () => {
+    if (activeTokenIndex > 0) {
+      onActiveTokenChange(activeTokenIndex - 1);
+      setProgress(0);
+    }
+  };
+
+  const handleNext = () => {
+    if (activeTokenIndex < tokens.length - 1) {
+      onActiveTokenChange(activeTokenIndex + 1);
+      setProgress(0);
+    }
+  };
+
+  const toggleSpeed = () => {
+    setSpeed((prev) => (prev === 1.0 ? 0.6 : 1.0));
+  };
+
+  const toggleLoop = () => {
+    setIsLooping((prev) => !prev);
+  };
+
+  const signGuide = currentToken && currentToken.type === 'gloss'
+    ? SIGN_VISUAL_GUIDES[currentToken.word] || null
+    : null;
+
+  return (
+    <div style={{
+      backgroundColor: 'var(--panel)',
+      border: '1px solid var(--line)',
+      borderRadius: 'var(--radius-lg)',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      {/* Video / Animated Stage Viewport */}
+      <div style={{
+        position: 'relative',
+        width: '100%',
+        height: '380px',
+        backgroundColor: '#0a0b10',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        overflow: 'hidden'
+      }}>
+        {tokens.length === 0 ? (
+          <div style={{ textAlign: 'center', maxWidth: '400px' }}>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--amber-subtle)',
+              border: '1px solid var(--amber)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px',
+              fontSize: '24px'
+            }}>
+              🤟
+            </div>
+            <h3 style={{ marginBottom: '8px' }}>Sign Playback Stage</h3>
+            <p style={{ fontSize: '14px' }}>
+              Type or speak a sentence above, then click <strong>"Play as signs"</strong> to watch the ISL sign sequence.
+            </p>
+          </div>
+        ) : currentToken ? (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            height: '100%',
+            animation: 'fadeIn 0.25s ease'
+          }}>
+            {currentToken.type === 'gloss' ? (
+              /* ISL Vocabulary Sign Animation Card */
+              <div style={{
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '14px',
+                maxWidth: '480px'
+              }}>
+                {/* Large Visual Glyph & Motion Badge */}
+                <div style={{
+                  position: 'relative',
+                  width: '120px',
+                  height: '120px',
+                  borderRadius: '24px',
+                  backgroundColor: signGuide ? signGuide.iconBg : 'var(--amber-subtle)',
+                  border: `2px solid ${signGuide ? signGuide.accent : 'var(--amber)'}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '54px',
+                  boxShadow: `0 0 30px ${signGuide ? signGuide.iconBg : 'var(--amber-glow)'}`,
+                  transform: isPlaying ? 'scale(1.04)' : 'scale(1)',
+                  transition: 'transform 0.2s ease'
+                }}>
+                  <span>{signGuide ? signGuide.emoji : '🤟'}</span>
+                  {/* Pulsing indicator */}
+                  {isPlaying && (
+                    <div style={{
+                      position: 'absolute',
+                      inset: '-6px',
+                      borderRadius: '28px',
+                      border: `1px dashed ${signGuide ? signGuide.accent : 'var(--amber)'}`,
+                      animation: 'spin 8s linear infinite'
+                    }} />
+                  )}
+                </div>
+
+                {/* Sign Gloss Name */}
+                <div>
+                  <span className="mono-eyebrow" style={{ color: 'var(--amber)' }}>
+                    ISL Sign {activeTokenIndex + 1} of {tokens.length}
+                  </span>
+                  <h2 style={{ fontSize: '32px', margin: '4px 0 6px', color: 'var(--white)' }}>
+                    {currentToken.word}
+                  </h2>
+                </div>
+
+                {/* Motion Instructions & Handshape Guide */}
+                {signGuide && (
+                  <div style={{
+                    backgroundColor: 'rgba(25, 28, 40, 0.8)',
+                    border: '1px solid var(--line)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '12px 18px',
+                    fontSize: '13px',
+                    color: 'var(--mist-light)',
+                    lineHeight: 1.5
+                  }}>
+                    <div style={{ marginBottom: '4px' }}>
+                      <strong style={{ color: signGuide.accent }}>Motion: </strong>
+                      {signGuide.motion}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', fontSize: '12px' }}>
+                      <span><strong>Direction:</strong> {signGuide.direction}</span>
+                      <span>•</span>
+                      <span><strong>Shape:</strong> {signGuide.handshape}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Fingerspelling Fallback Card */
+              <div style={{
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '16px',
+                maxWidth: '480px'
+              }}>
+                <span className="badge badge-amber" style={{ fontSize: '12px' }}>
+                  Fingerspelling Fallback (Out-of-Vocabulary)
+                </span>
+                <h3 style={{ fontSize: '24px' }}>
+                  Spelling: <span style={{ color: 'var(--amber)' }}>{currentToken.word}</span>
+                </h3>
+
+                {/* Individual Letter Glyph Display */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  {currentToken.letters.map((letter, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        width: '48px',
+                        height: '56px',
+                        borderRadius: '10px',
+                        backgroundColor: idx === fingerspellLetterIdx ? 'var(--amber)' : 'var(--panel-elevated)',
+                        color: idx === fingerspellLetterIdx ? '#191c28' : 'var(--white)',
+                        border: `1px solid ${idx === fingerspellLetterIdx ? 'var(--amber)' : 'var(--line)'}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontFamily: 'var(--font-display)',
+                        fontWeight: 700,
+                        fontSize: '22px',
+                        transform: idx === fingerspellLetterIdx ? 'scale(1.12)' : 'scale(1)',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {letter}
+                    </div>
+                  ))}
+                </div>
+
+                <p style={{ fontSize: '13px', color: 'var(--mist)' }}>
+                  Active Letter: <strong>{currentToken.letters[fingerspellLetterIdx] || '-'}</strong>
+                </p>
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {/* Scrubber Progress Bar */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '4px',
+          backgroundColor: 'var(--line)'
+        }}>
+          <div style={{
+            height: '100%',
+            width: `${progress}%`,
+            backgroundColor: 'var(--amber)',
+            transition: 'width 0.05s linear'
+          }} />
+        </div>
+      </div>
+
+      {/* Playback Control Bar */}
+      <div style={{
+        padding: '16px 20px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '12px',
+        borderTop: '1px solid var(--line)'
+      }}>
+        {/* Left: Step and Play Buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={handlePrev}
+            disabled={activeTokenIndex === 0 || tokens.length === 0}
+            className="btn-secondary"
+            style={{ padding: '8px 12px', fontSize: '13px' }}
+            title="Previous Sign"
+          >
+            ⏮ Prev
+          </button>
+
+          <button
+            id="btn-play-sign-sequence"
+            onClick={togglePlay}
+            disabled={tokens.length === 0}
+            className="btn-primary btn-amber"
+            style={{ padding: '8px 20px', fontSize: '14px' }}
+          >
+            {isPlaying ? '⏸ Pause' : '▶ Play Sequence'}
+          </button>
+
+          <button
+            onClick={handleRestart}
+            disabled={tokens.length === 0}
+            className="btn-secondary"
+            style={{ padding: '8px 12px', fontSize: '13px' }}
+            title="Restart from beginning"
+          >
+            🔄 Restart
+          </button>
+
+          <button
+            onClick={handleNext}
+            disabled={activeTokenIndex >= tokens.length - 1 || tokens.length === 0}
+            className="btn-secondary"
+            style={{ padding: '8px 12px', fontSize: '13px' }}
+            title="Next Sign"
+          >
+            Next ⏭
+          </button>
+        </div>
+
+        {/* Right: Speed & Loop Modifiers */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            id="btn-toggle-slow-mode"
+            onClick={toggleSpeed}
+            className={`badge ${speed === 0.6 ? 'badge-amber' : ''}`}
+            style={{ cursor: 'pointer', padding: '6px 12px', fontSize: '12px' }}
+            title="Toggle playback speed (1.0x / 0.6x)"
+          >
+            {speed === 0.6 ? '🐢 Slow Mode (0.6x)' : '⚡ Normal (1.0x)'}
+          </button>
+
+          <button
+            id="btn-toggle-repeat-mode"
+            onClick={toggleLoop}
+            className={`badge ${isLooping ? 'badge-amber' : ''}`}
+            style={{ cursor: 'pointer', padding: '6px 12px', fontSize: '12px' }}
+            title="Toggle repeat sequence loop"
+          >
+            {isLooping ? '🔁 Repeat: ON' : '➡ Repeat: OFF'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
