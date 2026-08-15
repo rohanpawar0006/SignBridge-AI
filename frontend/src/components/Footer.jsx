@@ -1,13 +1,17 @@
 import React from 'react';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 export default function Footer() {
+  const revealRef = useScrollReveal({ threshold: 0.08 });
+
   return (
     <footer style={{
       borderTop: '1px solid var(--line)',
       backgroundColor: 'var(--panel-subtle)',
-      padding: '56px 0 32px'
+      padding: '56px 0 32px',
+      transition: 'background-color 0.35s ease, border-color 0.35s ease'
     }}>
-      <div className="container">
+      <div className="container animate-on-scroll" ref={revealRef}>
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -17,7 +21,7 @@ export default function Footer() {
           marginBottom: '40px'
         }}>
           {/* Left Brand Summary */}
-          <div style={{ maxWidth: '400px' }}>
+          <div className="stagger-1" style={{ maxWidth: '400px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
               <span style={{
                 width: '10px',
@@ -43,7 +47,7 @@ export default function Footer() {
           </div>
 
           {/* Center Specs */}
-          <div>
+          <div className="stagger-2">
             <span className="mono-eyebrow" style={{ color: 'var(--white)', display: 'block', marginBottom: '12px' }}>
               Architecture Stack
             </span>
@@ -57,7 +61,7 @@ export default function Footer() {
           </div>
 
           {/* Right Locked Vocabulary */}
-          <div style={{ maxWidth: '300px' }}>
+          <div className="stagger-3" style={{ maxWidth: '300px' }}>
             <span className="mono-eyebrow" style={{ color: 'var(--white)', display: 'block', marginBottom: '12px' }}>
               Locked v1 Vocabulary (11 Signs)
             </span>
@@ -72,7 +76,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Baseline */}
-        <div style={{
+        <div className="stagger-4" style={{
           paddingTop: '24px',
           borderTop: '1px solid var(--line)',
           display: 'flex',

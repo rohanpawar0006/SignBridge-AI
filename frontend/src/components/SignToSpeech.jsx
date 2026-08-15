@@ -247,7 +247,7 @@ export default function SignToSpeech({ vocabList = [] }) {
         position: 'relative',
         width: '100%',
         height: '420px',
-        backgroundColor: '#0a0b10',
+        backgroundColor: 'var(--camera-bg)',
         borderRadius: 'var(--radius-lg)',
         border: '1px solid var(--line)',
         overflow: 'hidden',
@@ -368,7 +368,7 @@ export default function SignToSpeech({ vocabList = [] }) {
         {cameraError && (
           <div style={{
             zIndex: 20,
-            backgroundColor: 'rgba(25, 28, 40, 0.95)',
+            backgroundColor: 'var(--hud-bg)',
             border: '1px solid #ff6a5b',
             borderRadius: 'var(--radius-md)',
             padding: '24px',
@@ -401,7 +401,7 @@ export default function SignToSpeech({ vocabList = [] }) {
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 15,
-            backgroundColor: 'rgba(18, 20, 28, 0.92)',
+            backgroundColor: 'var(--hud-bg)',
             backdropFilter: 'blur(10px)',
             border: '1px solid var(--teal)',
             borderRadius: 'var(--radius-pill)',

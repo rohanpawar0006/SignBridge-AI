@@ -1,6 +1,10 @@
 import React from 'react';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 export default function HowItWorks() {
+  const signRevealRef = useScrollReveal();
+  const speechRevealRef = useScrollReveal();
+
   const signSteps = [
     {
       num: '01',
@@ -69,8 +73,8 @@ export default function HowItWorks() {
         </div>
 
         {/* Pipeline 1: Sign to Speech */}
-        <div style={{ marginBottom: '48px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+        <div className="animate-on-scroll" ref={signRevealRef} style={{ marginBottom: '48px' }}>
+          <div className="stagger-1" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
             <span className="badge badge-teal" style={{ fontSize: '13px', padding: '6px 14px' }}>
               Mode 1: Sign → Speech Pipeline
             </span>
@@ -84,7 +88,7 @@ export default function HowItWorks() {
             {signSteps.map((step, idx) => (
               <div
                 key={idx}
-                className="card-panel"
+                className={`card-panel stagger-${idx + 2}`}
                 style={{ padding: '24px', position: 'relative' }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -110,8 +114,8 @@ export default function HowItWorks() {
         </div>
 
         {/* Pipeline 2: Speech to Sign */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+        <div className="animate-on-scroll" ref={speechRevealRef}>
+          <div className="stagger-1" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
             <span className="badge badge-amber" style={{ fontSize: '13px', padding: '6px 14px' }}>
               Mode 2: Speech → Sign Pipeline
             </span>
@@ -125,7 +129,7 @@ export default function HowItWorks() {
             {speechSteps.map((step, idx) => (
               <div
                 key={idx}
-                className="card-panel"
+                className={`card-panel stagger-${idx + 2}`}
                 style={{ padding: '24px', position: 'relative' }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>

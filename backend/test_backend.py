@@ -78,15 +78,13 @@ def test_lstm_model_dimensions():
     print(f"[PASS] PyTorch LSTM forward pass verified with shape {output.shape}")
 
 
-def test_gesture_classifier_heuristic():
-    """Tests sliding window buffer and geometric classification on mock landmarks."""
+def test_gesture_classifier():
+    """Tests sliding window buffer, PyTorch model prediction, and geometric fallback on mock landmarks."""
+    # 1. Test with loaded PyTorch model
     classifier = GestureClassifier()
     assert len(classifier.buffer) == 0
+    assert classifier.is_model_loaded is True, "PyTorch model weights should be loaded"
 
-    # Create mock thumbs-up landmarks (YES):
-    # Wrist at (0.5, 0.7, 0.0)
-    # Thumb tip at (0.5, 0.35, 0.0) -> high up
-    # Fingers folded (tips below PIPs): tip y > pip y
     mock_thumbs_up = []
     for i in range(21):
         if i == 0:
@@ -107,11 +105,25 @@ def test_gesture_classifier_heuristic():
         if res:
             prediction = res
 
-    assert prediction is not None, "Classifier should detect thumbs-up gesture"
-    assert prediction["word"] == "YES"
-    assert prediction["source"] == "heuristic"
-    assert prediction["confidence"] >= 0.8
-    print(f"[PASS] GestureClassifier heuristic detected: {prediction}")
+    assert prediction is not None, "Classifier should output a prediction"
+    assert prediction["source"] in ["model", "heuristic"]
+    assert 0.0 <= prediction["confidence"] <= 1.0
+    print(f"[PASS] GestureClassifier output verified with payload: {prediction}")
+
+    # 2. Test explicit heuristic fallback mode
+    heuristic_classifier = GestureClassifier(weights_path="non_existent_weights.pth")
+    assert heuristic_classifier.is_model_loaded is False
+    heuristic_pred = None
+    for _ in range(30):
+        res = heuristic_classifier.add_frame(mock_thumbs_up)
+        if res:
+            heuristic_pred = res
+
+    assert heuristic_pred is not None, "Heuristic fallback should detect thumbs-up gesture"
+    assert heuristic_pred["word"] == "YES"
+    assert heuristic_pred["source"] == "heuristic"
+    assert heuristic_pred["confidence"] >= 0.8
+    print(f"[PASS] GestureClassifier explicit heuristic fallback detected: {heuristic_pred}")
 
 
 def test_websocket_gesture_endpoint():
@@ -150,7 +162,7 @@ if __name__ == "__main__":
     test_vocab_endpoint()
     test_clips_endpoint()
     test_lstm_model_dimensions()
-    test_gesture_classifier_heuristic()
+    test_gesture_classifier()
     test_websocket_gesture_endpoint()
     print("\n================ ALL BACKEND TESTS PASSED ================\n")
 

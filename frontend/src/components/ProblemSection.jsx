@@ -1,6 +1,9 @@
 import React from 'react';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 export default function ProblemSection() {
+  const revealRef = useScrollReveal();
+
   const problems = [
     {
       stat: '18M+',
@@ -24,8 +27,8 @@ export default function ProblemSection() {
 
   return (
     <section id="problem" className="section-divider">
-      <div className="container">
-        <div style={{ textAlign: 'center', maxWidth: '680px', margin: '0 auto 48px' }}>
+      <div className="container animate-on-scroll" ref={revealRef}>
+        <div className="stagger-1" style={{ textAlign: 'center', maxWidth: '680px', margin: '0 auto 48px' }}>
           <span className="mono-eyebrow" style={{ color: 'var(--coral)' }}>The Communication Gap</span>
           <h2 style={{ marginTop: '8px', marginBottom: '12px' }}>
             Why Indian Sign Language Needs a Unified Bridge
@@ -43,7 +46,7 @@ export default function ProblemSection() {
           {problems.map((item, idx) => (
             <div
               key={idx}
-              className="card-panel"
+              className={`card-panel stagger-${idx + 2}`}
               style={{
                 padding: '32px 24px',
                 display: 'flex',

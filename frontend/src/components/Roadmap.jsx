@@ -1,6 +1,9 @@
 import React from 'react';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 export default function Roadmap() {
+  const revealRef = useScrollReveal();
+
   const milestones = [
     {
       phase: 'Phase 1',
@@ -42,8 +45,8 @@ export default function Roadmap() {
 
   return (
     <section id="roadmap" className="section-divider">
-      <div className="container">
-        <div style={{ textAlign: 'center', maxWidth: '680px', margin: '0 auto 48px' }}>
+      <div className="container animate-on-scroll" ref={revealRef}>
+        <div className="stagger-1" style={{ textAlign: 'center', maxWidth: '680px', margin: '0 auto 48px' }}>
           <span className="mono-eyebrow" style={{ color: 'var(--amber)' }}>Engineering Milestones</span>
           <h2 style={{ marginTop: '8px', marginBottom: '12px' }}>
             Project Roadmap & Build Verification
@@ -63,7 +66,7 @@ export default function Roadmap() {
             return (
               <div
                 key={idx}
-                className="card-panel"
+                className={`card-panel stagger-${Math.min(idx + 2, 6)}`}
                 style={{
                   padding: '24px',
                   display: 'flex',

@@ -1,9 +1,32 @@
 /* ==========================================================================
    SignBridge AI — Design System Stylesheet
    Tokens and specifications strictly matching Design.md
+   Supports dark (default) and light themes via [data-theme] attribute.
    ========================================================================== */
 
+/* ── Shared Tokens (theme-independent) ── */
 :root {
+  /* Typography Families */
+  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  
+  /* Layout & Sizing */
+  --max-width: 1120px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-pill: 9999px;
+  
+  /* Transitions */
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+}
+
+/* ── Dark Theme (Default) ── */
+:root,
+[data-theme="dark"] {
   /* Core Palette Tokens */
   --ink: #12141c;
   --panel: #191c28;
@@ -29,26 +52,50 @@
   --mist: #8c93ab;
   --mist-light: #b4bacf;
   --white: #f5f6fb;
-  
-  /* Typography Families */
-  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'IBM Plex Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  
-  /* Layout & Sizing */
-  --max-width: 1120px;
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 18px;
-  --radius-pill: 9999px;
-  
-  /* Transitions */
-  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
-  --duration-fast: 150ms;
-  --duration-normal: 250ms;
+
+  /* Theme-specific surfaces */
+  --navbar-bg: rgba(18, 20, 28, 0.88);
+  --camera-bg: #0a0b10;
+  --input-bg: var(--ink);
+  --hud-bg: rgba(18, 20, 28, 0.92);
 }
 
-/* Reset & Base Setup */
+/* ── Light Theme ── */
+[data-theme="light"] {
+  /* Core Palette Tokens */
+  --ink: #f5f6fb;
+  --panel: #ffffff;
+  --panel-elevated: #f0f1f7;
+  --panel-subtle: #fafbfe;
+  --line: #dfe1ea;
+  --line-light: #c8cbd8;
+
+  /* Mode & Brand Accents — slightly deeper for contrast on light */
+  --teal: #1ab8a3;
+  --teal-glow: rgba(26, 184, 163, 0.22);
+  --teal-subtle: rgba(26, 184, 163, 0.10);
+
+  --amber: #e49a2a;
+  --amber-glow: rgba(228, 154, 42, 0.22);
+  --amber-subtle: rgba(228, 154, 42, 0.10);
+
+  --coral: #e8513f;
+  --coral-glow: rgba(232, 81, 63, 0.22);
+  --coral-subtle: rgba(232, 81, 63, 0.10);
+
+  /* Text & Tone Tokens */
+  --mist: #5c6380;
+  --mist-light: #3d435c;
+  --white: #12141c;
+
+  /* Theme-specific surfaces */
+  --navbar-bg: rgba(245, 246, 251, 0.92);
+  --camera-bg: #e8e9f0;
+  --input-bg: #f0f1f7;
+  --hud-bg: rgba(255, 255, 255, 0.92);
+}
+
+/* ── Reset & Base Setup ── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -65,6 +112,8 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  /* Smooth theme transitions */
+  transition: background-color 0.35s ease, color 0.35s ease;
 }
 
 body {
@@ -72,15 +121,17 @@ body {
   background-color: var(--ink);
   color: var(--white);
   overflow-x: hidden;
+  transition: background-color 0.35s ease, color 0.35s ease;
 }
 
-/* Typography Hierarchy */
+/* ── Typography Hierarchy ── */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   color: var(--white);
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.02em;
+  transition: color 0.35s ease;
 }
 
 h1 {
@@ -100,6 +151,7 @@ p {
   color: var(--mist);
   font-size: clamp(15px, 1.1vw, 16.5px);
   line-height: 1.65;
+  transition: color 0.35s ease;
 }
 
 .mono-eyebrow {
@@ -116,7 +168,7 @@ p {
   font-size: 13px;
 }
 
-/* Links and Interactive Elements */
+/* ── Links and Interactive Elements ── */
 a {
   color: inherit;
   text-decoration: none;
@@ -133,7 +185,7 @@ button {
   transition: all var(--duration-fast) var(--ease-standard);
 }
 
-/* Accessibility Focus Ring Standards */
+/* ── Accessibility Focus Ring Standards ── */
 :focus-visible {
   outline: 2px solid var(--coral);
   outline-offset: 3px;
@@ -146,7 +198,7 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-/* Common Layout Containers */
+/* ── Common Layout Containers ── */
 .container {
   width: 100%;
   max-width: var(--max-width);
@@ -164,6 +216,7 @@ textarea:focus-visible {
   border-top: 1px solid var(--line);
   padding-top: 88px;
   padding-bottom: 88px;
+  transition: border-color 0.35s ease;
 }
 
 @media (max-width: 768px) {
@@ -173,19 +226,20 @@ textarea:focus-visible {
   }
 }
 
-/* Card & Surface Defaults */
+/* ── Card & Surface Defaults ── */
 .card-panel {
   background-color: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  transition: border-color var(--duration-normal) var(--ease-standard);
+  transition: border-color var(--duration-normal) var(--ease-standard),
+              background-color 0.35s ease;
 }
 
 .card-panel:hover {
   border-color: var(--line-light);
 }
 
-/* Pill Badges */
+/* ── Pill Badges ── */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -199,6 +253,7 @@ textarea:focus-visible {
   background-color: var(--panel-elevated);
   border: 1px solid var(--line);
   color: var(--mist-light);
+  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease;
 }
 
 .badge-teal {
@@ -219,7 +274,7 @@ textarea:focus-visible {
   color: var(--coral);
 }
 
-/* Buttons */
+/* ── Buttons ── */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -258,7 +313,7 @@ textarea:focus-visible {
 
 .btn-secondary:hover {
   border-color: var(--line-light);
-  background-color: #24293c;
+  background-color: var(--panel);
 }
 
 .btn-teal {
@@ -283,7 +338,257 @@ textarea:focus-visible {
   box-shadow: 0 4px 16px var(--amber-glow);
 }
 
-/* Reduced Motion Override */
+/* ── Light theme button text overrides ── */
+[data-theme="light"] .btn-teal {
+  color: #ffffff;
+}
+[data-theme="light"] .btn-amber {
+  color: #ffffff;
+}
+[data-theme="light"] .btn-primary {
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Scroll-Triggered Entrance Animations
+   ========================================================================== */
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Hidden state before scroll intersection */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.7s var(--ease-standard),
+              transform 0.7s var(--ease-standard);
+}
+
+/* Visible state after intersection */
+.animate-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Staggered animation delays for child elements */
+.animate-on-scroll.visible .stagger-1 { transition-delay: 0ms; }
+.animate-on-scroll.visible .stagger-2 { transition-delay: 100ms; }
+.animate-on-scroll.visible .stagger-3 { transition-delay: 200ms; }
+.animate-on-scroll.visible .stagger-4 { transition-delay: 300ms; }
+.animate-on-scroll.visible .stagger-5 { transition-delay: 400ms; }
+.animate-on-scroll.visible .stagger-6 { transition-delay: 500ms; }
+
+/* Staggered children — initial hidden state */
+.animate-on-scroll .stagger-1,
+.animate-on-scroll .stagger-2,
+.animate-on-scroll .stagger-3,
+.animate-on-scroll .stagger-4,
+.animate-on-scroll .stagger-5,
+.animate-on-scroll .stagger-6 {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s var(--ease-standard),
+              transform 0.5s var(--ease-standard);
+}
+
+/* Staggered children — visible state */
+.animate-on-scroll.visible .stagger-1,
+.animate-on-scroll.visible .stagger-2,
+.animate-on-scroll.visible .stagger-3,
+.animate-on-scroll.visible .stagger-4,
+.animate-on-scroll.visible .stagger-5,
+.animate-on-scroll.visible .stagger-6 {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   Theme Toggle Switch
+   ========================================================================== */
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-pill);
+  background-color: var(--panel-elevated);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  transition: all 0.3s var(--ease-standard);
+}
+
+.theme-toggle:hover {
+  border-color: var(--line-light);
+  transform: scale(1.08);
+}
+
+.theme-toggle .theme-icon {
+  display: inline-block;
+  transition: transform 0.4s var(--ease-standard);
+}
+
+.theme-toggle:active .theme-icon {
+  transform: rotate(180deg) scale(0.85);
+}
+
+/* ==========================================================================
+   Responsive Mobile Navigation & Hamburger Drawer
+   ========================================================================== */
+
+/* Desktop Navigation Links */
+.nav-desktop {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+/* Mobile-only Hamburger Button */
+.hamburger-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background-color: var(--panel-elevated);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  padding: 8px;
+  gap: 5px;
+  transition: all 0.25s var(--ease-standard);
+  z-index: 110;
+}
+
+.hamburger-btn:hover {
+  border-color: var(--line-light);
+  transform: scale(1.05);
+}
+
+.hamburger-btn .bar {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background-color: var(--white);
+  border-radius: 2px;
+  transition: all 0.3s var(--ease-standard);
+  transform-origin: center;
+}
+
+/* Morph Hamburger to 'X' when open */
+.hamburger-btn.open .bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.hamburger-btn.open .bar:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.hamburger-btn.open .bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Mobile Dropdown Drawer */
+.mobile-drawer {
+  display: none;
+  position: absolute;
+  top: 68px;
+  left: 0;
+  width: 100%;
+  background-color: var(--navbar-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+  padding: 24px;
+  flex-direction: column;
+  gap: 20px;
+  animation: mobileDrawerSlideDown 0.3s var(--ease-standard) forwards;
+  z-index: 99;
+}
+
+@keyframes mobileDrawerSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  background-color: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--white);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-link:active {
+  border-color: var(--line-light);
+  background-color: var(--panel-elevated);
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 768px) {
+  .nav-desktop {
+    display: none !important;
+  }
+
+  .hamburger-btn {
+    display: flex !important;
+  }
+
+  .mobile-drawer.open {
+    display: flex !important;
+  }
+
+  .nav-badge-status {
+    display: none !important;
+  }
+}
+
+/* ── Reduced Motion Override ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -291,4 +596,24 @@ textarea:focus-visible {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+
+  .animate-on-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .animate-on-scroll .stagger-1,
+  .animate-on-scroll .stagger-2,
+  .animate-on-scroll .stagger-3,
+  .animate-on-scroll .stagger-4,
+  .animate-on-scroll .stagger-5,
+  .animate-on-scroll .stagger-6 {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .mobile-drawer {
+    animation: none !important;
+  }
 }
+

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import SignToSpeech from './components/SignToSpeech';
@@ -39,6 +40,7 @@ export default function App() {
   }, []);
 
   return (
+    <ThemeProvider>
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--ink)' }}>
       {/* Sticky Frosted Navbar */}
       <Navbar
@@ -152,5 +154,6 @@ export default function App() {
       {/* Footer */}
       <Footer />
     </div>
+    </ThemeProvider>
   );
 }

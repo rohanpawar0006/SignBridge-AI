@@ -1,24 +1,27 @@
 import React from 'react';
 import BridgeCanvas from './BridgeCanvas';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 export default function Hero({ activeMode, onModeChange }) {
+  const revealRef = useScrollReveal({ threshold: 0.1 });
+
   return (
     <section id="top" style={{ paddingTop: '56px', paddingBottom: '64px', textAlign: 'center' }}>
-      <div className="container">
+      <div className="container animate-on-scroll" ref={revealRef}>
         {/* Project Header Eyebrow */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+        <div className="stagger-1" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
           <span className="badge badge-coral">
             🎓 Final-Year Major Project · BE CSE (Artificial Intelligence & Machine Learning)
           </span>
         </div>
 
         {/* Main Headline */}
-        <h1 style={{ maxWidth: '900px', margin: '0 auto 16px', lineHeight: 1.12 }}>
+        <h1 className="stagger-2" style={{ maxWidth: '900px', margin: '0 auto 16px', lineHeight: 1.12 }}>
           Bridging Signs and Speech.
         </h1>
 
         {/* Subtitle */}
-        <p style={{
+        <p className="stagger-3" style={{
           maxWidth: '720px',
           margin: '0 auto 36px',
           fontSize: '18px',
@@ -30,12 +33,12 @@ export default function Hero({ activeMode, onModeChange }) {
         </p>
 
         {/* Signature Animated Bridge Motif */}
-        <div style={{ marginBottom: '36px' }}>
+        <div className="stagger-4" style={{ marginBottom: '36px' }}>
           <BridgeCanvas activeMode={activeMode} onModeChange={onModeChange} />
         </div>
 
         {/* CTAs for the two modes */}
-        <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <div className="stagger-5" style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button
             onClick={() => {
               onModeChange('sign-to-speech');
