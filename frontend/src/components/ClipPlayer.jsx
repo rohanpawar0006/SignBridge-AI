@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import SignVectorVisualizer from './SignVectorVisualizer';
 
 // ISL Visual Sign Details & Pedagogical motion paths for the 11 v1 vocabulary signs
 const SIGN_VISUAL_GUIDES = {
@@ -222,8 +223,8 @@ export default function ClipPlayer({
       <div style={{
         position: 'relative',
         width: '100%',
-        height: '380px',
-        backgroundColor: '#0a0b10',
+        minHeight: '400px',
+        backgroundColor: 'var(--camera-bg)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -272,34 +273,13 @@ export default function ClipPlayer({
                 gap: '14px',
                 maxWidth: '480px'
               }}>
-                {/* Large Visual Glyph & Motion Badge */}
-                <div style={{
-                  position: 'relative',
-                  width: '120px',
-                  height: '120px',
-                  borderRadius: '24px',
-                  backgroundColor: signGuide ? signGuide.iconBg : 'var(--amber-subtle)',
-                  border: `2px solid ${signGuide ? signGuide.accent : 'var(--amber)'}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '54px',
-                  boxShadow: `0 0 30px ${signGuide ? signGuide.iconBg : 'var(--amber-glow)'}`,
-                  transform: isPlaying ? 'scale(1.04)' : 'scale(1)',
-                  transition: 'transform 0.2s ease'
-                }}>
-                  <span>{signGuide ? signGuide.emoji : '🤟'}</span>
-                  {/* Pulsing indicator */}
-                  {isPlaying && (
-                    <div style={{
-                      position: 'absolute',
-                      inset: '-6px',
-                      borderRadius: '28px',
-                      border: `1px dashed ${signGuide ? signGuide.accent : 'var(--amber)'}`,
-                      animation: 'spin 8s linear infinite'
-                    }} />
-                  )}
-                </div>
+                {/* Dynamic Vector Kinematics Visualizer */}
+                <SignVectorVisualizer
+                  word={currentToken.word}
+                  isPlaying={isPlaying}
+                  progress={progress}
+                  accent={signGuide ? signGuide.accent : 'var(--amber)'}
+                />
 
                 {/* Sign Gloss Name */}
                 <div>
@@ -314,13 +294,15 @@ export default function ClipPlayer({
                 {/* Motion Instructions & Handshape Guide */}
                 {signGuide && (
                   <div style={{
-                    backgroundColor: 'rgba(25, 28, 40, 0.8)',
+                    backgroundColor: 'var(--hud-bg)',
                     border: '1px solid var(--line)',
                     borderRadius: 'var(--radius-md)',
                     padding: '12px 18px',
                     fontSize: '13px',
                     color: 'var(--mist-light)',
-                    lineHeight: 1.5
+                    lineHeight: 1.5,
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)'
                   }}>
                     <div style={{ marginBottom: '4px' }}>
                       <strong style={{ color: signGuide.accent }}>Motion: </strong>
