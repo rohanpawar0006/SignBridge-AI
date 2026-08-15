@@ -16,14 +16,18 @@ from app.config import (
     VOCABULARY,
     MODEL_PARAMS,
     PREDICTION_CONFIDENCE_THRESHOLD,
-    HEURISTIC_CONFIDENCE_THRESHOLD
+    HEURISTIC_CONFIDENCE_THRESHOLD,
+    MIN_ACCUMULATION_CONFIDENCE,
+    UNRECOGNIZED_CONFIDENCE_THRESHOLD,
+    GESTURE_COOLDOWN_SEC
 )
 from app.models.lstm_model import ISLGestureLSTM
 
 
 class GestureClassifier:
     """
-    Stateful classifier maintaining sliding temporal frames and classifying ISL signs.
+    Stateful classifier maintaining sliding temporal frames and classifying ISL signs
+    with conversational temporal smoothing and honest state feedback.
     """
 
     def __init__(self, weights_path: Optional[str] = None):
@@ -32,7 +36,7 @@ class GestureClassifier:
         self.buffer = deque(maxlen=self.window_size)
         self.last_predicted_word: Optional[str] = None
         self.last_prediction_time: float = 0.0
-        self.debounce_cooldown_sec: float = 0.8  # Prevent rapid spamming of the same token
+        self.debounce_cooldown_sec: float = GESTURE_COOLDOWN_SEC
 
         # Model Loading
         self.model: Optional[ISLGestureLSTM] = None
@@ -76,6 +80,76 @@ class GestureClassifier:
         self.last_predicted_word = None
         self.last_prediction_time = 0.0
 
+    def classify_window(self, window_frames: List[List[List[float]]]) -> Optional[Dict[str, Any]]:
+        """
+        Directly classifies a 30-frame sequence window extracted by the motion segmenter.
+        """
+        if not window_frames or len(window_frames) == 0:
+            return None
+
+        # Normalize all frames in window
+        normalized_sequence = [self._normalize_landmarks(frame) for frame in window_frames if len(frame) == 21]
+        if len(normalized_sequence) < 10:
+            return None
+
+        # Pad to 30 frames if needed
+        while len(normalized_sequence) < self.window_size:
+            normalized_sequence.insert(0, normalized_sequence[0])
+        normalized_sequence = normalized_sequence[-self.window_size:]
+
+        now = time.time()
+
+        # 1. PyTorch sequence classification
+        if self.is_model_loaded and self.model is not None:
+            tensor_input = torch.tensor([normalized_sequence], dtype=torch.float32)
+            class_idx, confidence = self.model.predict_with_confidence(tensor_input)
+            confidence_val = float(confidence)
+
+            if confidence_val >= MIN_ACCUMULATION_CONFIDENCE:
+                word = VOCABULARY[class_idx]
+                # Check deduplication cooldown
+                if word == self.last_predicted_word and (now - self.last_prediction_time) < self.debounce_cooldown_sec:
+                    return None
+
+                self.last_predicted_word = word
+                self.last_prediction_time = now
+                return {
+                    "word": word,
+                    "confidence": round(confidence_val, 2),
+                    "source": "model",
+                    "status": "recognized"
+                }
+            elif confidence_val < UNRECOGNIZED_CONFIDENCE_THRESHOLD:
+                return {
+                    "status": "unrecognized",
+                    "confidence": round(confidence_val, 2),
+                    "source": "model"
+                }
+
+        # 2. Heuristic fallback
+        last_raw_frame = window_frames[-1]
+        heuristic_res = self._classify_heuristic(last_raw_frame, normalized_sequence)
+        if heuristic_res:
+            word, conf = heuristic_res
+            if conf >= HEURISTIC_CONFIDENCE_THRESHOLD:
+                if word == self.last_predicted_word and (now - self.last_prediction_time) < self.debounce_cooldown_sec:
+                    return None
+
+                self.last_predicted_word = word
+                self.last_prediction_time = now
+                return {
+                    "word": word,
+                    "confidence": round(float(conf), 2),
+                    "source": "heuristic",
+                    "status": "recognized"
+                }
+
+        return {
+            "status": "unrecognized",
+            "confidence": 0.35,
+            "source": "heuristic"
+        }
+
     def add_frame(self, raw_landmarks: List[List[float]]) -> Optional[Dict[str, Any]]:
         """
         Accepts 21 3D landmarks [[x, y, z], ...] for a single frame,
@@ -92,14 +166,16 @@ class GestureClassifier:
         if len(self.buffer) < self.window_size:
             return None
 
+        now = time.time()
+
         # 1. Try PyTorch sequence inference if weights loaded
         if self.is_model_loaded and self.model is not None:
             tensor_input = torch.tensor(list(self.buffer), dtype=torch.float32).unsqueeze(0)
             class_idx, confidence = self.model.predict_with_confidence(tensor_input)
-            
-            if confidence >= PREDICTION_CONFIDENCE_THRESHOLD:
+            confidence_val = float(confidence)
+
+            if confidence_val >= MIN_ACCUMULATION_CONFIDENCE:
                 word = VOCABULARY[class_idx]
-                now = time.time()
                 # Apply debouncing
                 if word == self.last_predicted_word and (now - self.last_prediction_time) < self.debounce_cooldown_sec:
                     return None
@@ -108,25 +184,27 @@ class GestureClassifier:
                 self.last_prediction_time = now
                 return {
                     "word": word,
-                    "confidence": round(float(confidence), 2),
-                    "source": "model"
+                    "confidence": round(confidence_val, 2),
+                    "source": "model",
+                    "status": "recognized"
                 }
 
         # 2. Permanent Transparent Rule-based Geometric Heuristic Fallback
         heuristic_res = self._classify_heuristic(raw_landmarks, list(self.buffer))
         if heuristic_res:
             word, conf = heuristic_res
-            now = time.time()
-            if word == self.last_predicted_word and (now - self.last_prediction_time) < self.debounce_cooldown_sec:
-                return None
+            if conf >= HEURISTIC_CONFIDENCE_THRESHOLD:
+                if word == self.last_predicted_word and (now - self.last_prediction_time) < self.debounce_cooldown_sec:
+                    return None
 
-            self.last_predicted_word = word
-            self.last_prediction_time = now
-            return {
-                "word": word,
-                "confidence": round(float(conf), 2),
-                "source": "heuristic"
-            }
+                self.last_predicted_word = word
+                self.last_prediction_time = now
+                return {
+                    "word": word,
+                    "confidence": round(float(conf), 2),
+                    "source": "heuristic",
+                    "status": "recognized"
+                }
 
         return None
 

@@ -39,9 +39,12 @@ MODEL_PARAMS: Dict[str, Any] = {
     "sequence_length": 30   # 30-frame sliding window (~1 second at 30 fps)
 }
 
-# Recognition Thresholds
+# Recognition & Conversational Detection Thresholds
 PREDICTION_CONFIDENCE_THRESHOLD = 0.60
 HEURISTIC_CONFIDENCE_THRESHOLD = 0.55
+MIN_ACCUMULATION_CONFIDENCE = 0.60
+UNRECOGNIZED_CONFIDENCE_THRESHOLD = 0.45
+GESTURE_COOLDOWN_SEC = 1.5
 
 # Sign clips catalog metadata
 CLIP_CATALOG: Dict[str, Dict[str, Any]] = {

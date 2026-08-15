@@ -3,6 +3,11 @@ import { MediaPipeHandTracker } from '../services/mediapipe';
 import { GestureWebSocket } from '../services/websocket';
 import { drawHandLandmarks } from '../utils/drawLandmarks';
 import { speechService } from '../services/speech';
+import { MotionSegmenter, GESTURE_STATES, MOTION_CONFIG } from '../utils/motionSegmenter';
+
+// Conversational pause timing (2.5s continuous idle after signing => auto-speak)
+const AUTO_SPEAK_PAUSE_MS = 2500;
+const MIN_CONFIDENCE_THRESHOLD = 0.60;
 
 export default function SignToSpeech({ vocabList = [] }) {
   // Detection and Hardware states
@@ -11,39 +16,80 @@ export default function SignToSpeech({ vocabList = [] }) {
   const [wsStatus, setWsStatus] = useState('disconnected'); // 'connecting' | 'connected' | 'reconnecting' | 'disconnected' | 'error'
   const [fps, setFps] = useState(0);
 
+  // Conversational Gesture States
+  const [gestureState, setGestureState] = useState(GESTURE_STATES.IDLE);
+  const [liveVelocity, setLiveVelocity] = useState(0);
+  const [unrecognizedNotice, setUnrecognizedNotice] = useState(null);
+  const [autoSpeakNotification, setAutoSpeakNotification] = useState(null);
+
   // Recognition and Sentence states
   const [currentPrediction, setCurrentPrediction] = useState(null);
   const [sentenceWords, setSentenceWords] = useState([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechError, setSpeechError] = useState(null);
 
-  // DOM Refs
+  // DOM and Tracker Refs
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const trackerRef = useRef(null);
   const wsRef = useRef(null);
+  const segmenterRef = useRef(new MotionSegmenter());
   const frameCountRef = useRef(0);
   const lastFpsTimeRef = useRef(Date.now());
+  const lastActionTimeRef = useRef(Date.now());
+  const unrecognizedTimerRef = useRef(null);
+  const sentenceWordsRef = useRef(sentenceWords);
+
+  // Keep sentenceWordsRef in sync
+  useEffect(() => {
+    sentenceWordsRef.current = sentenceWords;
+  }, [sentenceWords]);
 
   // Handle incoming classification from backend
   const handlePrediction = useCallback((prediction) => {
-    if (!prediction || !prediction.word) return;
-    setCurrentPrediction(prediction);
+    if (!prediction) return;
 
-    // Append word to sentence tray if not immediately duplicate of last word
-    setSentenceWords((prev) => {
-      if (prev.length > 0 && prev[prev.length - 1].word === prediction.word) {
-        // Just update timestamp/confidence of the latest token
-        const updated = [...prev];
-        updated[updated.length - 1] = {
-          ...prediction,
-          id: updated[updated.length - 1].id,
-          timestamp: Date.now()
-        };
-        return updated;
+    // 1. Unrecognized gesture feedback (per Rules.md - honest state, no silent failure)
+    if (prediction.status === 'unrecognized') {
+      setUnrecognizedNotice('Gesture not recognized — try adjusting hand position or speed');
+      if (unrecognizedTimerRef.current) clearTimeout(unrecognizedTimerRef.current);
+      unrecognizedTimerRef.current = setTimeout(() => {
+        setUnrecognizedNotice(null);
+      }, 3500);
+      return;
+    }
+
+    // 2. Recognized gesture with confidence check
+    if (prediction.word) {
+      const confidence = prediction.confidence || 0;
+      if (confidence < MIN_CONFIDENCE_THRESHOLD) {
+        setUnrecognizedNotice(`Low confidence guess discarded: ${prediction.word} (${Math.round(confidence * 100)}%)`);
+        if (unrecognizedTimerRef.current) clearTimeout(unrecognizedTimerRef.current);
+        unrecognizedTimerRef.current = setTimeout(() => {
+          setUnrecognizedNotice(null);
+        }, 3000);
+        return;
       }
-      return [...prev, { ...prediction, id: `${prediction.word}-${Date.now()}` }];
-    });
+
+      // Valid high-confidence prediction
+      setUnrecognizedNotice(null);
+      setCurrentPrediction(prediction);
+      lastActionTimeRef.current = Date.now();
+
+      // Append word to sentence tray if not immediately duplicate
+      setSentenceWords((prev) => {
+        if (prev.length > 0 && prev[prev.length - 1].word === prediction.word) {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            ...prediction,
+            id: updated[updated.length - 1].id,
+            timestamp: Date.now()
+          };
+          return updated;
+        }
+        return [...prev, { ...prediction, id: `${prediction.word}-${Date.now()}` }];
+      });
+    }
   }, []);
 
   // Initialize WebSocket connection
@@ -61,6 +107,38 @@ export default function SignToSpeech({ vocabList = [] }) {
       }
     };
   }, [handlePrediction]);
+
+  // Conversational Auto-Sentence Boundary Monitor (2.5s IDLE pause auto-speak)
+  useEffect(() => {
+    if (!isDetecting) return;
+
+    const interval = setInterval(() => {
+      const currentWords = sentenceWordsRef.current;
+      if (currentWords.length === 0 || isSpeaking) return;
+
+      const idleDuration = Date.now() - lastActionTimeRef.current;
+      if (gestureState === GESTURE_STATES.IDLE && idleDuration >= AUTO_SPEAK_PAUSE_MS) {
+        // Auto-speak full sentence
+        const fullText = currentWords.map((w) => w.word).join(' ');
+        setAutoSpeakNotification(`Auto-spoken: "${fullText}"`);
+        
+        speechService.speak(fullText, {
+          lang: 'en-IN',
+          onStart: () => setIsSpeaking(true),
+          onEnd: () => {
+            setIsSpeaking(false);
+            setSentenceWords([]);
+            setCurrentPrediction(null);
+            setTimeout(() => setAutoSpeakNotification(null), 3000);
+          }
+        });
+
+        lastActionTimeRef.current = Date.now();
+      }
+    }, 400);
+
+    return () => clearInterval(interval);
+  }, [isDetecting, gestureState, isSpeaking]);
 
   // Frame processing callback from MediaPipe
   const handleLandmarkResults = useCallback((results) => {
@@ -87,20 +165,45 @@ export default function SignToSpeech({ vocabList = [] }) {
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
       const landmarks = results.multiHandLandmarks[0];
 
-      // Draw skeleton on canvas
-      drawHandLandmarks(ctx, landmarks, width, height, true, '#2dd6c0');
+      // Dynamic skeleton color based on gesture state
+      const skeletonColor =
+        gestureState === GESTURE_STATES.SIGNING
+          ? '#f6ac3f' // Amber while actively signing
+          : gestureState === GESTURE_STATES.SETTLING
+          ? '#2dd6c0' // Teal when settling/reading
+          : '#7e859b'; // Muted when idle
 
-      // Convert landmarks to [[x, y, z], ...] for WebSocket backend stream
+      drawHandLandmarks(ctx, landmarks, width, height, true, skeletonColor);
+
+      // Convert landmarks to [[x, y, z], ...]
       const landmarkArray = landmarks.map((pt) => [pt.x, pt.y, pt.z || 0.0]);
-      if (wsRef.current) {
-        wsRef.current.sendLandmarks(landmarkArray, now);
+
+      // Process frame through conversational motion segmenter
+      const segment = segmenterRef.current.processFrame(landmarkArray, now);
+      setGestureState(segment.state);
+      setLiveVelocity(segment.velocity);
+
+      if (segment.state === GESTURE_STATES.SIGNING) {
+        lastActionTimeRef.current = now;
       }
+
+      // When SIGNING -> SETTLING transition completes, stream the finalized 30-frame window
+      if (segment.isGestureComplete && segment.gestureWindow && wsRef.current) {
+        wsRef.current.sendGestureWindow(segment.gestureWindow, now);
+      }
+    } else {
+      // No hands present
+      const segment = segmenterRef.current.processFrame(null, now);
+      setGestureState(segment.state);
+      setLiveVelocity(0);
     }
-  }, []);
+  }, [gestureState]);
 
   // Start Camera and Tracker
   const startDetection = async () => {
     setCameraError(null);
+    setUnrecognizedNotice(null);
+    setAutoSpeakNotification(null);
     if (!videoRef.current) return;
 
     try {
@@ -117,6 +220,8 @@ export default function SignToSpeech({ vocabList = [] }) {
         trackerRef.current = tracker;
       }
 
+      segmenterRef.current.reset();
+      lastActionTimeRef.current = Date.now();
       await trackerRef.current.start();
       setIsDetecting(true);
     } catch (err) {
@@ -137,7 +242,9 @@ export default function SignToSpeech({ vocabList = [] }) {
       const ctx = canvasRef.current.getContext('2d');
       ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     }
+    segmenterRef.current.reset();
     setIsDetecting(false);
+    setGestureState(GESTURE_STATES.IDLE);
     setFps(0);
   };
 
@@ -147,10 +254,13 @@ export default function SignToSpeech({ vocabList = [] }) {
       if (trackerRef.current) {
         trackerRef.current.stop();
       }
+      if (unrecognizedTimerRef.current) {
+        clearTimeout(unrecognizedTimerRef.current);
+      }
     };
   }, []);
 
-  // Speak accumulated sentence
+  // Speak accumulated sentence manually
   const handleSpeakSentence = () => {
     if (sentenceWords.length === 0) return;
     const fullText = sentenceWords.map((w) => w.word).join(' ');
@@ -163,10 +273,17 @@ export default function SignToSpeech({ vocabList = [] }) {
     });
   };
 
+  // Undo / Remove most recent word
+  const handleUndoLastWord = () => {
+    setSentenceWords((prev) => prev.slice(0, -1));
+    lastActionTimeRef.current = Date.now();
+  };
+
   // Clear accumulated sentence
   const handleClearSentence = () => {
     setSentenceWords([]);
     setCurrentPrediction(null);
+    lastActionTimeRef.current = Date.now();
     if (wsRef.current) {
       wsRef.current.sendReset();
     }
@@ -175,6 +292,7 @@ export default function SignToSpeech({ vocabList = [] }) {
   // Remove single word chip
   const removeWordChip = (chipId) => {
     setSentenceWords((prev) => prev.filter((item) => item.id !== chipId));
+    lastActionTimeRef.current = Date.now();
   };
 
   // Manual Quick-Insert for test/demo mode
@@ -182,13 +300,50 @@ export default function SignToSpeech({ vocabList = [] }) {
     handlePrediction({
       word: word,
       confidence: 0.95,
-      source: 'manual'
+      source: 'manual',
+      status: 'recognized'
     });
   };
 
+  // Helper badge color for live state indicator
+  const getStateBadgeConfig = () => {
+    switch (gestureState) {
+      case GESTURE_STATES.SIGNING:
+        return {
+          bg: 'rgba(246, 172, 63, 0.2)',
+          border: 'var(--amber)',
+          color: 'var(--amber)',
+          icon: '⚡',
+          label: 'SIGNING IN PROGRESS',
+          desc: `Motion: ${(liveVelocity * 100).toFixed(1)}%`
+        };
+      case GESTURE_STATES.SETTLING:
+        return {
+          bg: 'rgba(45, 214, 192, 0.2)',
+          border: 'var(--teal)',
+          color: 'var(--teal)',
+          icon: '🔍',
+          label: 'READING GESTURE',
+          desc: 'Evaluating hold posture...'
+        };
+      case GESTURE_STATES.IDLE:
+      default:
+        return {
+          bg: 'rgba(126, 133, 155, 0.15)',
+          border: 'var(--line)',
+          color: 'var(--mist-light)',
+          icon: '🟢',
+          label: 'IDLE / LISTENING',
+          desc: sentenceWords.length > 0 ? 'Pause to auto-speak' : 'Waiting for gesture...'
+        };
+    }
+  };
+
+  const stateConfig = getStateBadgeConfig();
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Top Controls & Status Bar */}
+      {/* Top Controls & Conversational Status Bar */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -200,7 +355,7 @@ export default function SignToSpeech({ vocabList = [] }) {
         border: '1px solid var(--line)',
         borderRadius: 'var(--radius-md)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <button
             id="btn-toggle-sign-detect"
             onClick={isDetecting ? stopDetection : startDetection}
@@ -212,33 +367,76 @@ export default function SignToSpeech({ vocabList = [] }) {
               color: isDetecting ? '#ffffff' : '#0b221e'
             }}
           >
-            {isDetecting ? '⏹ Stop Detection' : '▶ Start Detecting'}
+            {isDetecting ? '⏹ Stop Detection' : '▶ Start Live Detection'}
           </button>
 
           <span className="mono-data" style={{ color: 'var(--mist-light)', fontSize: '13px' }}>
             FPS: <strong style={{ color: fps > 15 ? 'var(--teal)' : 'var(--mist)' }}>{fps}</strong>
           </span>
+
+          {/* Live Motion Velocity Meter */}
+          {isDetecting && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--mist-light)' }}>
+              <span className="mono-eyebrow" style={{ fontSize: '10px' }}>Motion:</span>
+              <div style={{
+                width: '60px',
+                height: '6px',
+                backgroundColor: 'var(--ink)',
+                borderRadius: '3px',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  width: `${Math.min(100, liveVelocity * 2000)}%`,
+                  height: '100%',
+                  backgroundColor: gestureState === GESTURE_STATES.SIGNING ? 'var(--amber)' : 'var(--teal)',
+                  transition: 'width 0.1s linear'
+                }} />
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Live WebSocket Status Pill */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span
-            style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor:
-                wsStatus === 'connected'
-                  ? 'var(--teal)'
-                  : wsStatus === 'connecting' || wsStatus === 'reconnecting'
-                  ? 'var(--amber)'
-                  : '#ff5543',
-              boxShadow: wsStatus === 'connected' ? '0 0 8px var(--teal)' : 'none'
-            }}
-          ></span>
-          <span className="mono-eyebrow" style={{ fontSize: '11px' }}>
-            Backend: {wsStatus.toUpperCase()}
-          </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          {/* Live Conversational Gesture State Pill */}
+          {isDetecting && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 12px',
+              borderRadius: 'var(--radius-pill)',
+              backgroundColor: stateConfig.bg,
+              border: `1px solid ${stateConfig.border}`,
+              color: stateConfig.color,
+              fontSize: '11px',
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 600
+            }}>
+              <span>{stateConfig.icon}</span>
+              <span>{stateConfig.label}</span>
+            </div>
+          )}
+
+          {/* Live WebSocket Status Pill */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                backgroundColor:
+                  wsStatus === 'connected'
+                    ? 'var(--teal)'
+                    : wsStatus === 'connecting' || wsStatus === 'reconnecting'
+                    ? 'var(--amber)'
+                    : '#ff5543',
+                boxShadow: wsStatus === 'connected' ? '0 0 8px var(--teal)' : 'none'
+              }}
+            />
+            <span className="mono-eyebrow" style={{ fontSize: '11px' }}>
+              Backend: {wsStatus.toUpperCase()}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -265,7 +463,7 @@ export default function SignToSpeech({ vocabList = [] }) {
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            transform: 'scaleX(-1)', // Mirror webcam feed for intuitive movement
+            transform: 'scaleX(-1)', // Mirror webcam feed
             opacity: isDetecting ? 0.9 : 0
           }}
         />
@@ -285,47 +483,11 @@ export default function SignToSpeech({ vocabList = [] }) {
           }}
         />
 
-        {/* Viewport Corner Brackets & HUD Overlay */}
-        <div style={{
-          position: 'absolute',
-          top: '16px',
-          left: '16px',
-          width: '24px',
-          height: '24px',
-          borderTop: '2px solid var(--teal)',
-          borderLeft: '2px solid var(--teal)',
-          zIndex: 12
-        }} />
-        <div style={{
-          position: 'absolute',
-          top: '16px',
-          right: '16px',
-          width: '24px',
-          height: '24px',
-          borderTop: '2px solid var(--teal)',
-          borderRight: '2px solid var(--teal)',
-          zIndex: 12
-        }} />
-        <div style={{
-          position: 'absolute',
-          bottom: '16px',
-          left: '16px',
-          width: '24px',
-          height: '24px',
-          borderBottom: '2px solid var(--teal)',
-          borderLeft: '2px solid var(--teal)',
-          zIndex: 12
-        }} />
-        <div style={{
-          position: 'absolute',
-          bottom: '16px',
-          right: '16px',
-          width: '24px',
-          height: '24px',
-          borderBottom: '2px solid var(--teal)',
-          borderRight: '2px solid var(--teal)',
-          zIndex: 12
-        }} />
+        {/* Viewport Corner Brackets */}
+        <div style={{ position: 'absolute', top: '16px', left: '16px', width: '24px', height: '24px', borderTop: '2px solid var(--teal)', borderLeft: '2px solid var(--teal)', zIndex: 12 }} />
+        <div style={{ position: 'absolute', top: '16px', right: '16px', width: '24px', height: '24px', borderTop: '2px solid var(--teal)', borderRight: '2px solid var(--teal)', zIndex: 12 }} />
+        <div style={{ position: 'absolute', bottom: '16px', left: '16px', width: '24px', height: '24px', borderBottom: '2px solid var(--teal)', borderLeft: '2px solid var(--teal)', zIndex: 12 }} />
+        <div style={{ position: 'absolute', bottom: '16px', right: '16px', width: '24px', height: '24px', borderBottom: '2px solid var(--teal)', borderRight: '2px solid var(--teal)', zIndex: 12 }} />
 
         {/* Idle Screen Placeholder */}
         {!isDetecting && !cameraError && (
@@ -350,9 +512,9 @@ export default function SignToSpeech({ vocabList = [] }) {
             }}>
               📹
             </div>
-            <h3 style={{ marginBottom: '8px' }}>Camera Inactive</h3>
+            <h3 style={{ marginBottom: '8px' }}>Continuous Detection Ready</h3>
             <p style={{ fontSize: '14px', marginBottom: '20px' }}>
-              Click <strong>"Start Detecting"</strong> to enable your webcam and track 21 hand landmarks in real time.
+              Click <strong>"Start Live Detection"</strong> to begin signing naturally. The system segments gestures in real-time, recognizes signs upon settling, and automatically speaks full sentences on natural pauses.
             </p>
             <button
               onClick={startDetection}
@@ -394,7 +556,7 @@ export default function SignToSpeech({ vocabList = [] }) {
         )}
 
         {/* Live Detected Gesture HUD Badge */}
-        {isDetecting && currentPrediction && (
+        {isDetecting && currentPrediction && !unrecognizedNotice && (
           <div style={{
             position: 'absolute',
             bottom: '24px',
@@ -409,7 +571,8 @@ export default function SignToSpeech({ vocabList = [] }) {
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            boxShadow: '0 4px 20px var(--teal-glow)'
+            boxShadow: '0 4px 20px var(--teal-glow)',
+            animation: 'fadeIn 0.2s ease-out'
           }}>
             <span className="mono-eyebrow" style={{ color: 'var(--teal)' }}>
               Detected:
@@ -422,16 +585,91 @@ export default function SignToSpeech({ vocabList = [] }) {
             </span>
           </div>
         )}
+
+        {/* Honest Unrecognized Gesture Notice (Rules.md) */}
+        {isDetecting && unrecognizedNotice && (
+          <div style={{
+            position: 'absolute',
+            bottom: '24px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 15,
+            backgroundColor: 'rgba(255, 106, 91, 0.2)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid var(--coral)',
+            borderRadius: 'var(--radius-pill)',
+            padding: '8px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            color: 'var(--coral)',
+            fontSize: '13px',
+            fontFamily: 'var(--font-mono)',
+            boxShadow: '0 4px 20px rgba(255, 106, 91, 0.25)',
+            animation: 'fadeIn 0.2s ease-out'
+          }}>
+            <span>⚠️</span>
+            <span>{unrecognizedNotice}</span>
+          </div>
+        )}
+
+        {/* Auto-Spoken Sentence Boundary Toast */}
+        {autoSpeakNotification && (
+          <div style={{
+            position: 'absolute',
+            top: '24px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 16,
+            backgroundColor: 'rgba(45, 214, 192, 0.25)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid var(--teal)',
+            borderRadius: 'var(--radius-pill)',
+            padding: '8px 22px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            color: '#ffffff',
+            fontSize: '13.5px',
+            fontWeight: 600,
+            boxShadow: '0 4px 20px var(--teal-glow)',
+            animation: 'fadeIn 0.2s ease-out'
+          }}>
+            <span>🔊</span>
+            <span>{autoSpeakNotification}</span>
+          </div>
+        )}
       </div>
 
       {/* Sentence Accumulator & Vocalizer Tray */}
       <div className="card-panel" style={{ padding: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '14px' }}>
           <div>
-            <span className="mono-eyebrow" style={{ color: 'var(--teal)' }}>Recognized Sentence</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="mono-eyebrow" style={{ color: 'var(--teal)' }}>Conversational Sentence Flow</span>
+              {isDetecting && sentenceWords.length > 0 && (
+                <span className="badge badge-teal" style={{ fontSize: '10px' }}>
+                  Auto-speak on 2.5s pause
+                </span>
+              )}
+            </div>
             <h3 style={{ fontSize: '18px', marginTop: '4px' }}>Sign → Speech Output</h3>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <button
+              onClick={handleUndoLastWord}
+              disabled={sentenceWords.length === 0}
+              className="btn-secondary"
+              title="Undo most recent word"
+              style={{
+                padding: '8px 14px',
+                fontSize: '13.5px',
+                opacity: sentenceWords.length === 0 ? 0.5 : 1
+              }}
+            >
+              ↺ Undo Last
+            </button>
             <button
               id="btn-speak-sentence"
               onClick={handleSpeakSentence}
@@ -474,10 +712,10 @@ export default function SignToSpeech({ vocabList = [] }) {
         }}>
           {sentenceWords.length === 0 ? (
             <span style={{ color: 'var(--mist)', fontSize: '14px', fontStyle: 'italic' }}>
-              No signs recognized yet. Turn on detection and sign in front of your camera, or click sample vocabulary chips below.
+              No signs recognized yet. Start live detection and sign naturally — words will accumulate into sentences and auto-speak on pauses.
             </span>
           ) : (
-            sentenceWords.map((item) => (
+            sentenceWords.map((item, idx) => (
               <span
                 key={item.id}
                 style={{
@@ -485,7 +723,7 @@ export default function SignToSpeech({ vocabList = [] }) {
                   alignItems: 'center',
                   gap: '8px',
                   backgroundColor: 'var(--panel-elevated)',
-                  border: '1px solid var(--teal)',
+                  border: idx === sentenceWords.length - 1 ? '1.5px solid var(--teal)' : '1px solid var(--line)',
                   color: 'var(--white)',
                   padding: '6px 14px',
                   borderRadius: 'var(--radius-pill)',
@@ -501,13 +739,19 @@ export default function SignToSpeech({ vocabList = [] }) {
                 </span>
                 <button
                   onClick={() => removeWordChip(item.id)}
-                  title="Remove word"
+                  title="Remove this word"
                   style={{
                     color: 'var(--mist)',
                     marginLeft: '2px',
                     fontSize: '14px',
-                    lineHeight: 1
+                    lineHeight: 1,
+                    cursor: 'pointer',
+                    background: 'transparent',
+                    border: 'none',
+                    padding: '0 2px'
                   }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = '#ff6a5b'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--mist)'; }}
                 >
                   ×
                 </button>
@@ -519,7 +763,7 @@ export default function SignToSpeech({ vocabList = [] }) {
         {/* Full Synthesized Text Preview */}
         {sentenceWords.length > 0 && (
           <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="mono-eyebrow" style={{ fontSize: '11px' }}>Spoken Text:</span>
+            <span className="mono-eyebrow" style={{ fontSize: '11px' }}>Current Sentence:</span>
             <span style={{ color: 'var(--white)', fontStyle: 'italic', fontSize: '14.5px' }}>
               "{sentenceWords.map((w) => w.word).join(' ')}"
             </span>
@@ -530,7 +774,7 @@ export default function SignToSpeech({ vocabList = [] }) {
         <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--line)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
             <span className="mono-eyebrow" style={{ fontSize: '11px', color: 'var(--mist)' }}>
-              Quick-Test Simulator (Locked v1 Vocabulary):
+              Quick-Test Simulator (16 ISL Vocabulary Signs):
             </span>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>

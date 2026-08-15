@@ -66,7 +66,7 @@ export class GestureWebSocket {
       this.ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          if (data && data.word) {
+          if (data) {
             this.onPrediction(data);
           }
         } catch (e) {
@@ -126,6 +126,23 @@ export class GestureWebSocket {
       return true;
     } catch (e) {
       console.error('[SignBridge WS] Send failed:', e);
+      return false;
+    }
+  }
+
+  sendGestureWindow(gestureWindow, timestamp = Date.now()) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      return false;
+    }
+
+    try {
+      this.ws.send(JSON.stringify({
+        gesture_window: gestureWindow,
+        timestamp
+      }));
+      return true;
+    } catch (e) {
+      console.error('[SignBridge WS] Send gesture window failed:', e);
       return false;
     }
   }

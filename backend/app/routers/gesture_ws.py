@@ -43,11 +43,19 @@ async def gesture_websocket_endpoint(websocket: WebSocket):
                 await websocket.send_json({"status": "buffer_cleared"})
                 continue
 
+            # 1. Check for segmented completed gesture window from frontend
+            gesture_window = data.get("gesture_window")
+            if gesture_window:
+                result = classifier.classify_window(gesture_window)
+                if result:
+                    await websocket.send_json(result)
+                continue
+
+            # 2. Check for streaming frame landmarks
             landmarks = data.get("landmarks")
             if not landmarks:
                 continue
 
-            # Process frame through classifier
             result = classifier.add_frame(landmarks)
             if result:
                 await websocket.send_json(result)
