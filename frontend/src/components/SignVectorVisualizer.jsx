@@ -315,6 +315,98 @@ export default function SignVectorVisualizer({
           </g>
         );
 
+      case 'GOOD':
+        return (
+          <g>
+            {/* Chin Anchor Point */}
+            <circle cx="80" cy="65" r="18" fill="none" stroke="var(--line)" strokeWidth="2" strokeDasharray="3 3" />
+            {/* Outward Forward Sweeping Arc */}
+            <path
+              d="M 80 65 Q 120 50 155 95"
+              fill="none"
+              stroke={accent}
+              strokeWidth="3.5"
+              strokeDasharray="4 4"
+            />
+            {/* Flat Hand with Upward Affirmation Thumb */}
+            <path d="M 140 100 L 160 115" fill="none" stroke={accent} strokeWidth="5" strokeLinecap="round" />
+            <path d="M 145 90 L 145 70" fill="none" stroke={accent} strokeWidth="5" strokeLinecap="round" />
+            <circle cx="145" cy="66" r="4.5" fill={accent} />
+            <circle cx="152" cy="110" r="14" fill="var(--panel-elevated)" stroke={accent} strokeWidth="2.5" />
+            {/* Forward Arrow */}
+            <path d="M 148 108 L 158 110 L 154 98" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" />
+          </g>
+        );
+
+      case 'SORRY':
+        return (
+          <g>
+            {/* Chest Center Silhouette */}
+            <circle cx="100" cy="100" r="45" fill="none" stroke="var(--line)" strokeWidth="2" strokeDasharray="3 3" />
+            {/* Circular Orbit Path */}
+            <path
+              d="M 100 65 A 35 35 0 1 1 65 100"
+              fill="none"
+              stroke={accent}
+              strokeWidth="3.5"
+              strokeDasharray="4 4"
+            />
+            {/* Circular Arrow */}
+            <path d="M 60 92 L 65 100 L 74 96" fill="none" stroke={accent} strokeWidth="3.5" strokeLinecap="round" />
+            {/* Closed Fist on Chest */}
+            <circle cx="100" cy="100" r="20" fill="var(--panel-elevated)" stroke={accent} strokeWidth="3.5" />
+            <path d="M 92 88 L 108 104" fill="none" stroke={accent} strokeWidth="3" strokeLinecap="round" />
+          </g>
+        );
+
+      case 'TIME':
+        return (
+          <g>
+            {/* Opposite Arm & Wrist Base */}
+            <rect x="50" y="115" width="100" height="26" rx="10" fill="var(--panel-elevated)" stroke="var(--line)" strokeWidth="2.5" />
+            {/* Wrist Watch Silhouette */}
+            <circle cx="100" cy="128" r="14" fill="var(--panel)" stroke={accent} strokeWidth="2.5" />
+            <path d="M 100 120 L 100 128 L 106 128" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" />
+            {/* Tapping Index Finger from Above */}
+            <path d="M 100 50 L 100 110" fill="none" stroke={accent} strokeWidth="5.5" strokeLinecap="round" />
+            <circle cx="100" cy="46" r="5" fill={accent} />
+            {/* Tap Ripples */}
+            <circle cx="100" cy="112" r="8" fill="none" stroke={accent} strokeWidth="2" />
+            <circle cx="100" cy="112" r={isPlaying ? 14 : 10} fill="none" stroke={accent} strokeWidth="1.5" strokeDasharray="2 2" />
+          </g>
+        );
+
+      case 'NAME':
+        return (
+          <g>
+            {/* Base Horizontal 2-Finger H-Hand */}
+            <path d="M 60 120 L 130 120" fill="none" stroke="var(--mist-light)" strokeWidth="5.5" strokeLinecap="round" />
+            <path d="M 60 132 L 130 132" fill="none" stroke="var(--mist-light)" strokeWidth="5.5" strokeLinecap="round" />
+            {/* Top Perpendicular Tapping 2-Finger H-Hand */}
+            <path d="M 100 60 L 100 130" fill="none" stroke={accent} strokeWidth="5.5" strokeLinecap="round" />
+            <path d="M 112 60 L 112 130" fill="none" stroke={accent} strokeWidth="5.5" strokeLinecap="round" />
+            {/* Intersecting Double Tap Flare */}
+            <circle cx="106" cy="126" r="9" fill="none" stroke="var(--coral)" strokeWidth="2.5" />
+            <path d="M 106 112 L 106 140" fill="none" stroke="var(--coral)" strokeWidth="1.5" strokeDasharray="2 2" />
+          </g>
+        );
+
+      case 'STOP':
+        return (
+          <g>
+            {/* Horizontal Receiving Palm Base */}
+            <path d="M 50 145 L 150 145" fill="none" stroke="var(--mist-light)" strokeWidth="7" strokeLinecap="round" />
+            {/* Vertical Chopping Palm */}
+            <path d="M 100 50 L 100 135" fill="none" stroke={accent} strokeWidth="7" strokeLinecap="round" />
+            {/* Vertical Palm Fingers Contour */}
+            <rect x="94" y="55" width="12" height="65" rx="5" fill="var(--panel-elevated)" stroke={accent} strokeWidth="2.5" />
+            {/* Firm Impact / Stop Shockwave */}
+            <path d="M 75 138 L 85 145 L 75 152" fill="none" stroke="var(--coral)" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M 125 138 L 115 145 L 125 152" fill="none" stroke="var(--coral)" strokeWidth="2.5" strokeLinecap="round" />
+            <circle cx="100" cy="145" r="7" fill="var(--coral)" />
+          </g>
+        );
+
       default:
         return (
           <g>

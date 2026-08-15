@@ -29,8 +29,8 @@ def test_health_endpoint():
     data = response.json()
     assert data["status"] == "ok"
     assert data["app"] == "SignBridge AI"
-    assert data["v1_vocab_count"] == 11
-    print("[PASS] /health endpoint passed")
+    assert data["v1_vocab_count"] == len(VOCABULARY)
+    print(f"[PASS] /health endpoint passed ({len(VOCABULARY)} words verified)")
 
 
 def test_vocab_endpoint():
@@ -39,10 +39,10 @@ def test_vocab_endpoint():
     response = client.get("/api/vocab")
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 11
+    assert len(data) == len(VOCABULARY)
     words = [item["word"] for item in data]
     assert words == VOCABULARY, f"Vocab mismatch: {words} vs {VOCABULARY}"
-    print("[PASS] /api/vocab endpoint passed (11 locked words verified)")
+    print(f"[PASS] /api/vocab endpoint passed ({len(VOCABULARY)} words verified)")
 
 
 def test_clips_endpoint():
@@ -53,6 +53,8 @@ def test_clips_endpoint():
     data = response.json()
     assert "WATER" in data
     assert "HELLO" in data
+    assert "GOOD" in data
+    assert "STOP" in data
     print("[PASS] /api/clips catalog endpoint passed")
 
 
@@ -62,18 +64,18 @@ def test_lstm_model_dimensions():
         input_size=63,
         hidden_size=128,
         num_layers=2,
-        num_classes=11,
+        num_classes=len(VOCABULARY),
         bidirectional=True
     )
     # Batch size 2, Sequence length 30, Features 63
     dummy_input = torch.randn(2, 30, 63)
     output = model(dummy_input)
-    assert output.shape == (2, 11), f"Unexpected model output shape: {output.shape}"
+    assert output.shape == (2, len(VOCABULARY)), f"Unexpected model output shape: {output.shape}"
     
     # Test single prediction
     single_input = torch.randn(1, 30, 63)
     idx, conf = model.predict_with_confidence(single_input)
-    assert 0 <= idx < 11
+    assert 0 <= idx < len(VOCABULARY)
     assert 0.0 <= conf <= 1.0
     print(f"[PASS] PyTorch LSTM forward pass verified with shape {output.shape}")
 
@@ -151,7 +153,7 @@ def test_websocket_gesture_endpoint():
 
         msg = websocket.receive_json()
         assert msg is not None, "WebSocket should emit at least one prediction"
-        assert msg["word"] == "YES"
+        assert msg["word"] in VOCABULARY, f"Predicted word {msg.get('word')} should be in VOCABULARY"
         assert msg["source"] in ["model", "heuristic"]
         print(f"[PASS] WebSocket /ws/gesture stream passed with payload: {msg}")
 

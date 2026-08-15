@@ -12,7 +12,7 @@ export async function fetchVocabulary() {
     return await res.json();
   } catch (err) {
     console.warn('[API] Could not fetch vocab from backend, using local fallback list:', err);
-    // Return standard 11 locked words as fallback if backend is momentarily unreachable
+    // Return standard 16 words as fallback if backend is momentarily unreachable
     return [
       { word: "I", description: "Index finger pointing gently toward chest", category: "Pronoun" },
       { word: "WANT", description: "Both open hands pulling inward with fingers bending", category: "Verb" },
@@ -24,7 +24,12 @@ export async function fetchVocabulary() {
       { word: "PLEASE", description: "Flat palm rubbing in a circular motion on the chest", category: "Courtesy" },
       { word: "HELLO", description: "Open hand waving or saluting from forehead outward", category: "Greeting" },
       { word: "FRIEND", description: "Interlocking index fingers hooked together twice", category: "Noun" },
-      { word: "FOOD", description: "Fingertips pinched together tapping mouth repeatedly", category: "Noun" }
+      { word: "FOOD", description: "Fingertips pinched together tapping mouth repeatedly", category: "Noun" },
+      { word: "GOOD", description: "Flat open hand touching chin and moving forward", category: "Courtesy" },
+      { word: "SORRY", description: "Closed fist with thumb rubbing circular motion on chest", category: "Courtesy" },
+      { word: "TIME", description: "Index finger tapping back of opposite wrist", category: "Temporal" },
+      { word: "NAME", description: "Index and middle fingers tapping together across each other", category: "Identity" },
+      { word: "STOP", description: "Flat open hand chopping downward firmly into horizontal palm", category: "Action/Command" }
     ];
   }
 }

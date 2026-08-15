@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="100%" height="100%">
+  <rect width="240" height="240" rx="20" fill="#151824" stroke="#2b2f40" stroke-width="2"/>
+  <circle cx="120" cy="120" r="80" fill="#ff6a5b" fill-opacity="0.08"/>
+  <path d="M 60 175 L 180 175" fill="none" stroke="#b4bacf" stroke-width="8" stroke-linecap="round"/>
+  <path d="M 120 60 L 120 165" fill="none" stroke="#ff6a5b" stroke-width="8" stroke-linecap="round"/>
+  <rect x="113" y="65" width="14" height="75" rx="6" fill="#1f2333" stroke="#ff6a5b" stroke-width="3"/>
+  <circle cx="120" cy="175" r="9" fill="#ff6a5b"/>
+  <text x="120" y="222" text-anchor="middle" fill="#f5f6fb" font-family="'Space Grotesk', sans-serif" font-weight="700" font-size="16">ISL: STOP (COMMAND)</text>
+</svg>

@@ -61,12 +61,12 @@ export default function Footer() {
           </div>
 
           {/* Right Locked Vocabulary */}
-          <div className="stagger-3" style={{ maxWidth: '300px' }}>
+          <div className="stagger-3" style={{ maxWidth: '320px' }}>
             <span className="mono-eyebrow" style={{ color: 'var(--white)', display: 'block', marginBottom: '12px' }}>
-              Locked v1 Vocabulary (11 Signs)
+              ISL Vocabulary Catalog (16 Signs)
             </span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {['I', 'WANT', 'WATER', 'HELP', 'THANK YOU', 'YES', 'NO', 'PLEASE', 'HELLO', 'FRIEND', 'FOOD'].map((w) => (
+              {['I', 'WANT', 'WATER', 'HELP', 'THANK YOU', 'YES', 'NO', 'PLEASE', 'HELLO', 'FRIEND', 'FOOD', 'GOOD', 'SORRY', 'TIME', 'NAME', 'STOP'].map((w) => (
                 <span key={w} className="badge" style={{ fontSize: '10.5px' }}>
                   {w}
                 </span>

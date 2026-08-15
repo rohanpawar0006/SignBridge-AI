@@ -244,4 +244,24 @@ class GestureClassifier:
         if is_index_extended and is_middle_extended and is_ring_extended:
             return ("PLEASE", 0.78)
 
+        # 12. GOOD (Thumb up with slight outward forward posture)
+        if is_thumb_up and not all_fingers_folded:
+            return ("GOOD", 0.83)
+
+        # 13. SORRY (Fist rotated on chest)
+        if all_fingers_folded and not is_thumb_up and not is_thumb_down:
+            return ("SORRY", 0.82)
+
+        # 14. TIME (Index finger pointing at wrist)
+        if is_index_extended and not is_middle_extended and index_tip[1] > wrist[1] - 0.05:
+            return ("TIME", 0.85)
+
+        # 15. NAME (H-Handshape: Index & Middle extended horizontally)
+        if is_index_extended and is_middle_extended and not is_ring_extended and not is_pinky_extended:
+            return ("NAME", 0.81)
+
+        # 16. STOP (Flat palm facing outward vertically)
+        if all_fingers_extended and thumb_tip[1] >= wrist[1] - 0.08:
+            return ("STOP", 0.86)
+
         return None

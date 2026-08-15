@@ -1,10 +1,10 @@
 /**
  * SignBridge AI - ISL Dictionary & Tokenizer Utility
- * Maps natural English phrases and synonyms to the locked 11-word v1 vocabulary,
+ * Maps natural English phrases and synonyms to the 16-word ISL vocabulary,
  * providing fingerspelling fallback tokenization for out-of-vocabulary words.
  */
 
-// Locked v1 Vocabulary words
+// 16-Word ISL Vocabulary
 export const V1_VOCABULARY = [
   'I',
   'WANT',
@@ -16,7 +16,12 @@ export const V1_VOCABULARY = [
   'PLEASE',
   'HELLO',
   'FRIEND',
-  'FOOD'
+  'FOOD',
+  'GOOD',
+  'SORRY',
+  'TIME',
+  'NAME',
+  'STOP'
 ];
 
 // Natural language phrase and synonym mappings
@@ -24,7 +29,12 @@ const PHRASE_MAPPINGS = {
   'thank you': 'THANK YOU',
   'thanks a lot': 'THANK YOU',
   'thanks': 'THANK YOU',
-  'thank u': 'THANK YOU'
+  'thank u': 'THANK YOU',
+  'good morning': 'GOOD',
+  'good night': 'GOOD',
+  'good afternoon': 'GOOD',
+  'i am sorry': 'SORRY',
+  'excuse me': 'SORRY'
 };
 
 const WORD_SYNONYMS = {
@@ -104,7 +114,46 @@ const WORD_SYNONYMS = {
   hungry: 'FOOD',
   lunch: 'FOOD',
   dinner: 'FOOD',
-  breakfast: 'FOOD'
+  breakfast: 'FOOD',
+
+  // GOOD
+  good: 'GOOD',
+  great: 'GOOD',
+  nice: 'GOOD',
+  fine: 'GOOD',
+  awesome: 'GOOD',
+  well: 'GOOD',
+  best: 'GOOD',
+
+  // SORRY
+  sorry: 'SORRY',
+  apologize: 'SORRY',
+  apology: 'SORRY',
+  forgive: 'SORRY',
+  pardon: 'SORRY',
+
+  // TIME
+  time: 'TIME',
+  clock: 'TIME',
+  hour: 'TIME',
+  minute: 'TIME',
+  when: 'TIME',
+  now: 'TIME',
+  today: 'TIME',
+
+  // NAME
+  name: 'NAME',
+  called: 'NAME',
+  identity: 'NAME',
+  title: 'NAME',
+
+  // STOP
+  stop: 'STOP',
+  halt: 'STOP',
+  pause: 'STOP',
+  wait: 'STOP',
+  end: 'STOP',
+  finish: 'STOP'
 };
 
 // Words that can be omitted in standard ISL gloss representation

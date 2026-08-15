@@ -90,6 +90,46 @@ const SIGN_VISUAL_GUIDES = {
     handshape: 'Pinch Cluster',
     iconBg: 'rgba(246, 172, 63, 0.15)',
     accent: '#f6ac3f'
+  },
+  GOOD: {
+    emoji: '✨',
+    motion: 'Flat open hand touches chin and extends outward with affirmative gesture',
+    direction: 'Chin to Forward',
+    handshape: 'Open Palm Affirmation',
+    iconBg: 'rgba(45, 214, 192, 0.15)',
+    accent: '#2dd6c0'
+  },
+  SORRY: {
+    emoji: '🙏',
+    motion: 'Closed fist with thumb rubbing in circular motion over the chest',
+    direction: 'Circular Chest Rub',
+    handshape: 'Closed Fist (A-handshape)',
+    iconBg: 'rgba(255, 106, 91, 0.15)',
+    accent: '#ff6a5b'
+  },
+  TIME: {
+    emoji: '⌚',
+    motion: 'Index finger taps the back of opposite wrist where a wristwatch sits',
+    direction: 'Tap Wrist Twice',
+    handshape: 'Index Point to Wrist',
+    iconBg: 'rgba(246, 172, 63, 0.15)',
+    accent: '#f6ac3f'
+  },
+  NAME: {
+    emoji: '🏷️',
+    motion: 'Index and middle fingers extended (H-hand) tapping together perpendicularly twice',
+    direction: 'Double Tap Cross',
+    handshape: 'Two-Finger H-shape',
+    iconBg: 'rgba(45, 214, 192, 0.15)',
+    accent: '#2dd6c0'
+  },
+  STOP: {
+    emoji: '🛑',
+    motion: 'Open flat hand chops vertically downward firmly into open horizontal palm',
+    direction: 'Vertical Downward Chop',
+    handshape: 'Flat Chop to Palm',
+    iconBg: 'rgba(255, 106, 91, 0.15)',
+    accent: '#ff6a5b'
   }
 };
 
