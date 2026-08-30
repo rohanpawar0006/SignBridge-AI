@@ -10,6 +10,7 @@ import Roadmap from './components/Roadmap';
 import Footer from './components/Footer';
 import ConversationMode from './components/ConversationMode';
 import SignCapture from './components/SignCapture';
+import PracticeStudio from './components/PracticeStudio';
 import { fetchVocabulary, checkBackendHealth } from './services/api';
 
 /**
@@ -194,17 +195,42 @@ export default function App() {
                 <span>🗣️</span>
                 <span>Mode 2: Speech → Sign</span>
               </button>
+
+              <button
+                id="tab-mode-practice"
+                onClick={() => setActiveMode('practice')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 22px',
+                  borderRadius: 'var(--radius-pill)',
+                  backgroundColor: activeMode === 'practice' ? 'var(--purple)' : 'transparent',
+                  color: activeMode === 'practice' ? '#ffffff' : 'var(--mist-light)',
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 600,
+                  fontSize: '14.5px',
+                  boxShadow: activeMode === 'practice' ? '0 4px 16px rgba(168, 85, 247, 0.3)' : 'none',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer'
+                }}
+              >
+                <span>🎮</span>
+                <span>Practice & Learning Studio</span>
+              </button>
             </div>
           </div>
 
           {/* Active Mode Panel Container */}
-          <div style={{ maxWidth: activeMode === 'live-conversation' ? '1100px' : '960px', margin: '0 auto' }}>
+          <div style={{ maxWidth: activeMode === 'live-conversation' || activeMode === 'practice' ? '1100px' : '960px', margin: '0 auto' }}>
             {activeMode === 'live-conversation' ? (
               <ConversationMode vocabList={vocabList} backendHealth={backendHealth} />
             ) : activeMode === 'sign-to-speech' ? (
               <SignToSpeech vocabList={vocabList} />
-            ) : (
+            ) : activeMode === 'speech-to-sign' ? (
               <SpeechToSign />
+            ) : (
+              <PracticeStudio />
             )}
           </div>
         </div>

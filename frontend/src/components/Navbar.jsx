@@ -252,6 +252,20 @@ export default function Navbar({ activeMode, onModeChange, backendHealth }) {
               🗣️ Speech → Sign
             </button>
           </div>
+          <button
+            onClick={() => handleModeSelect('practice')}
+            className={`badge ${activeMode === 'practice' ? 'badge-purple' : ''}`}
+            style={{
+              padding: '10px 12px',
+              justifyContent: 'center',
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              marginTop: '4px'
+            }}
+          >
+            🎮 Practice & Learning Studio
+          </button>
         </div>
 
         {/* Mobile Status Bar */}
