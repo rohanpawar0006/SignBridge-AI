@@ -8,9 +8,9 @@ It bridges the communication gap between ISL signers and spoken-language users t
 
 ## 🌐 Live Production Deployments
 
-- **Frontend Web Application (Vercel)**: [https://signbridge-ai.vercel.app](https://signbridge-ai.vercel.app)
+- **Frontend Web Application (Vercel)**: [https://frontend-rohanpawar0006s-projects.vercel.app](https://frontend-rohanpawar0006s-projects.vercel.app)
 - **Backend API & WebSocket Server (Render)**: [https://signbridge-ai-qybu.onrender.com](https://signbridge-ai-qybu.onrender.com)
-- **API Health Check**: [https://signbridge-ai-qybu.onrender.com/health](https://signbridge-ai-qybu.onrender.com/health)
+- **Backend Health Check**: [https://signbridge-ai-qybu.onrender.com/health](https://signbridge-ai-qybu.onrender.com/health)
 - **GitHub Repository & CI/CD**: [https://github.com/rohanpawar0006/SignBridge-AI](https://github.com/rohanpawar0006/SignBridge-AI)
 
 ---
