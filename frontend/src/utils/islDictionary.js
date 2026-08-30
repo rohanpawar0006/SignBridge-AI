@@ -24,17 +24,27 @@ export const V1_VOCABULARY = [
   'STOP'
 ];
 
-// Natural language phrase and synonym mappings
+// Natural language phrase and synonym mappings (English, Hinglish & Hindi)
 const PHRASE_MAPPINGS = {
   'thank you': 'THANK YOU',
   'thanks a lot': 'THANK YOU',
   'thanks': 'THANK YOU',
   'thank u': 'THANK YOU',
+  'dhanyawad': 'THANK YOU',
+  'shukriya': 'THANK YOU',
+  'धन्यवाद': 'THANK YOU',
+  'शुक्रिया': 'THANK YOU',
   'good morning': 'GOOD',
   'good night': 'GOOD',
   'good afternoon': 'GOOD',
+  'shubh prabhat': 'GOOD',
+  'shubh ratri': 'GOOD',
   'i am sorry': 'SORRY',
-  'excuse me': 'SORRY'
+  'excuse me': 'SORRY',
+  'maaf kijiye': 'SORRY',
+  'maaf karo': 'SORRY',
+  'माफ़ कीजिए': 'SORRY',
+  'क्षमा करें': 'SORRY'
 };
 
 const WORD_SYNONYMS = {
@@ -43,6 +53,14 @@ const WORD_SYNONYMS = {
   me: 'I',
   myself: 'I',
   my: 'I',
+  main: 'I',
+  mujhe: 'I',
+  mera: 'I',
+  hum: 'I',
+  'मैं': 'I',
+  'मुझे': 'I',
+  'मेरा': 'I',
+  'हम': 'I',
 
   // WANT
   want: 'WANT',
@@ -52,11 +70,22 @@ const WORD_SYNONYMS = {
   needs: 'WANT',
   require: 'WANT',
   desire: 'WANT',
+  chahiye: 'WANT',
+  zaroorat: 'WANT',
+  mangta: 'WANT',
+  'चाहिए': 'WANT',
+  'ज़रूरत': 'WANT',
+  'मांगता': 'WANT',
 
   // WATER
   water: 'WATER',
   drink: 'WATER',
   drinking: 'WATER',
+  paani: 'WATER',
+  pani: 'WATER',
+  jal: 'WATER',
+  'पानी': 'WATER',
+  'जल': 'WATER',
 
   // HELP
   help: 'HELP',
@@ -65,6 +94,13 @@ const WORD_SYNONYMS = {
   assist: 'HELP',
   assistance: 'HELP',
   emergency: 'HELP',
+  madad: 'HELP',
+  sahayata: 'HELP',
+  sahayta: 'HELP',
+  bachao: 'HELP',
+  'मदद': 'HELP',
+  'सहायता': 'HELP',
+  'बचाओ': 'HELP',
 
   // YES
   yes: 'YES',
@@ -75,6 +111,13 @@ const WORD_SYNONYMS = {
   agree: 'YES',
   ok: 'YES',
   okay: 'YES',
+  haan: 'YES',
+  ha: 'YES',
+  sahi: 'YES',
+  ji: 'YES',
+  'हाँ': 'YES',
+  'जी': 'YES',
+  'सही': 'YES',
 
   // NO
   no: 'NO',
@@ -83,19 +126,37 @@ const WORD_SYNONYMS = {
   not: 'NO',
   never: 'NO',
   disagree: 'NO',
+  nahi: 'NO',
+  nahin: 'NO',
+  na: 'NO',
+  mat: 'NO',
+  'नहीं': 'NO',
+  'ना': 'NO',
+  'मत': 'NO',
 
   // PLEASE
   please: 'PLEASE',
   kindly: 'PLEASE',
   plz: 'PLEASE',
+  kripya: 'PLEASE',
+  kripaya: 'PLEASE',
+  meherbani: 'PLEASE',
+  'कृपया': 'PLEASE',
+  'मेहरबानी': 'PLEASE',
 
   // HELLO
   hello: 'HELLO',
   hi: 'HELLO',
   hey: 'HELLO',
   namaste: 'HELLO',
+  namaskar: 'HELLO',
+  pranam: 'HELLO',
   greetings: 'HELLO',
   morning: 'HELLO',
+  'नमस्ते': 'HELLO',
+  'नमस्कार': 'HELLO',
+  'प्रणाम': 'HELLO',
+  'हेलो': 'HELLO',
 
   // FRIEND
   friend: 'FRIEND',
@@ -105,6 +166,13 @@ const WORD_SYNONYMS = {
   pal: 'FRIEND',
   brother: 'FRIEND',
   sister: 'FRIEND',
+  dost: 'FRIEND',
+  mitra: 'FRIEND',
+  yaar: 'FRIEND',
+  bhai: 'FRIEND',
+  'दोस्त': 'FRIEND',
+  'मित्र': 'FRIEND',
+  'यार': 'FRIEND',
 
   // FOOD
   food: 'FOOD',
@@ -115,6 +183,14 @@ const WORD_SYNONYMS = {
   lunch: 'FOOD',
   dinner: 'FOOD',
   breakfast: 'FOOD',
+  khana: 'FOOD',
+  bhojan: 'FOOD',
+  roti: 'FOOD',
+  bhookh: 'FOOD',
+  'खाना': 'FOOD',
+  'भोजन': 'FOOD',
+  'रोटी': 'FOOD',
+  'भूख': 'FOOD',
 
   // GOOD
   good: 'GOOD',
@@ -124,6 +200,15 @@ const WORD_SYNONYMS = {
   awesome: 'GOOD',
   well: 'GOOD',
   best: 'GOOD',
+  achha: 'GOOD',
+  accha: 'GOOD',
+  badhiya: 'GOOD',
+  shandar: 'GOOD',
+  theek: 'GOOD',
+  'अच्छा': 'GOOD',
+  'बढ़िया': 'GOOD',
+  'शानदार': 'GOOD',
+  'ठीक': 'GOOD',
 
   // SORRY
   sorry: 'SORRY',
@@ -131,6 +216,12 @@ const WORD_SYNONYMS = {
   apology: 'SORRY',
   forgive: 'SORRY',
   pardon: 'SORRY',
+  maaf: 'SORRY',
+  maafi: 'SORRY',
+  kshama: 'SORRY',
+  'माफ़': 'SORRY',
+  'माफ़ी': 'SORRY',
+  'क्षमा': 'SORRY',
 
   // TIME
   time: 'TIME',
@@ -140,12 +231,26 @@ const WORD_SYNONYMS = {
   when: 'TIME',
   now: 'TIME',
   today: 'TIME',
+  samay: 'TIME',
+  waqt: 'TIME',
+  ghadi: 'TIME',
+  kab: 'TIME',
+  aaj: 'TIME',
+  ab: 'TIME',
+  'समय': 'TIME',
+  'वक्त': 'TIME',
+  'घड़ी': 'TIME',
+  'कब': 'TIME',
+  'आज': 'TIME',
+  'अब': 'TIME',
 
   // NAME
   name: 'NAME',
   called: 'NAME',
   identity: 'NAME',
   title: 'NAME',
+  naam: 'NAME',
+  'नाम': 'NAME',
 
   // STOP
   stop: 'STOP',
@@ -153,7 +258,37 @@ const WORD_SYNONYMS = {
   pause: 'STOP',
   wait: 'STOP',
   end: 'STOP',
-  finish: 'STOP'
+  finish: 'STOP',
+  ruko: 'STOP',
+  rukhiye: 'STOP',
+  rok: 'STOP',
+  bas: 'STOP',
+  thahro: 'STOP',
+  'रुको': 'STOP',
+  'रुकिए': 'STOP',
+  'रोक': 'STOP',
+  'बस': 'STOP',
+  'ठहरो': 'STOP'
+};
+
+// Bilingual dictionary mapping for vocalization & labels
+export const VOCABULARY_TRANSLATIONS = {
+  I: { en: 'I / Me', hi: 'मैं' },
+  WANT: { en: 'Want / Need', hi: 'चाहिए' },
+  WATER: { en: 'Water', hi: 'पानी' },
+  HELP: { en: 'Help', hi: 'मदद' },
+  'THANK YOU': { en: 'Thank You', hi: 'धन्यवाद' },
+  YES: { en: 'Yes', hi: 'हाँ' },
+  NO: { en: 'No', hi: 'नहीं' },
+  PLEASE: { en: 'Please', hi: 'कृपया' },
+  HELLO: { en: 'Hello', hi: 'नमस्ते' },
+  FRIEND: { en: 'Friend', hi: 'दोस्त' },
+  FOOD: { en: 'Food', hi: 'खाना' },
+  GOOD: { en: 'Good', hi: 'अच्छा' },
+  SORRY: { en: 'Sorry', hi: 'माफ़ कीजिए' },
+  TIME: { en: 'Time', hi: 'समय' },
+  NAME: { en: 'Name', hi: 'नाम' },
+  STOP: { en: 'Stop', hi: 'रुको' }
 };
 
 // Words that can be omitted in standard ISL gloss representation

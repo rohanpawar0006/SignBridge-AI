@@ -4,26 +4,29 @@ import { GestureWebSocket } from '../services/websocket';
 import { drawHandLandmarks } from '../utils/drawLandmarks';
 import { speechService } from '../services/speech';
 import { MotionSegmenter, GESTURE_STATES } from '../utils/motionSegmenter';
-import { tokenizeSentenceToISL } from '../utils/islDictionary';
+import { tokenizeSentenceToISL, VOCABULARY_TRANSLATIONS } from '../utils/islDictionary';
 import ClipPlayer from './ClipPlayer';
 
 const AUTO_SPEAK_PAUSE_MS = 2200;
 const MIN_CONFIDENCE_THRESHOLD = 0.60;
 
 const SPEAKER_PRESETS = [
-  'Hello friend',
-  'I want water',
-  'Please help me',
-  'Thank you',
-  'Good time',
-  'Stop food'
+  { en: 'Hello friend', hi: 'नमस्ते दोस्त' },
+  { en: 'I want water', hi: 'मुझे पानी चाहिए' },
+  { en: 'Please help me', hi: 'कृपया मेरी मदद करें' },
+  { en: 'Thank you', hi: 'धन्यवाद' },
+  { en: 'Good time', hi: 'अच्छा समय' },
+  { en: 'Stop food', hi: 'खाना रुको' }
 ];
 
 export default function ConversationMode({ vocabList = [], backendHealth }) {
+  // --- Language State ---
+  const [speechLang, setSpeechLang] = useState('en-IN'); // 'en-IN' | 'hi-IN'
+
   // --- Signer State (Live CV + WebSocket) ---
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState(null);
-  const [wsStatus, setWsStatus] = useState('disconnected'); // 'connecting' | 'connected' | 'reconnecting' | 'disconnected' | 'error'
+  const [wsStatus, setWsStatus] = useState('disconnected');
   const [fps, setFps] = useState(0);
   const [gestureState, setGestureState] = useState(GESTURE_STATES.IDLE);
   const [liveVelocity, setLiveVelocity] = useState(0);
@@ -36,7 +39,7 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
   const [isListening, setIsListening] = useState(false);
   const [micError, setMicError] = useState(null);
 
-  // --- Visual Sign Display for Signer (Speech → Sign translation view) ---
+  // --- Visual Sign Display for Signer ---
   const [speakerSignTokens, setSpeakerSignTokens] = useState([]);
   const [activeSignTokenIndex, setActiveSignTokenIndex] = useState(0);
   const [isSignPlaying, setIsSignPlaying] = useState(false);
@@ -57,6 +60,7 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
   const [isTtsMuted, setIsTtsMuted] = useState(false);
   const ttsQueueRef = useRef([]);
   const isProcessingTtsRef = useRef(false);
+  const speechLangRef = useRef(speechLang);
 
   // --- Refs ---
   const videoRef = useRef(null);
@@ -79,8 +83,11 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
   }, [signerWords]);
 
   useEffect(() => {
+    speechLangRef.current = speechLang;
+  }, [speechLang]);
+
+  useEffect(() => {
     isListeningRef.current = isListening;
-    // When mic stops listening, flush any queued TTS items
     if (!isListening) {
       processNextTts();
     }
@@ -90,7 +97,6 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
     isTtsMutedRef.current = isTtsMuted;
   }, [isTtsMuted]);
 
-  // Auto-scroll transcript to bottom
   useEffect(() => {
     if (transcriptEndRef.current) {
       transcriptEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -100,28 +106,27 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
   // --- TTS Audio FIFO Queue Arbitration ---
   const processNextTts = useCallback(() => {
     if (isProcessingTtsRef.current) return;
-    if (isListeningRef.current) return; // Do not speak over active microphone
+    if (isListeningRef.current) return;
     if (isTtsMutedRef.current) {
       ttsQueueRef.current = [];
       return;
     }
     if (ttsQueueRef.current.length === 0) return;
 
-    const nextText = ttsQueueRef.current.shift();
-    if (!nextText) return;
+    const item = ttsQueueRef.current.shift();
+    if (!item || !item.text) return;
 
     isProcessingTtsRef.current = true;
     setIsTtsSpeaking(true);
 
-    speechService.speak(nextText, {
-      lang: 'en-IN',
+    speechService.speak(item.text, {
+      lang: item.lang || 'en-IN',
       onStart: () => {
         setIsTtsSpeaking(true);
       },
       onEnd: () => {
         isProcessingTtsRef.current = false;
         setIsTtsSpeaking(false);
-        // Process next in queue
         setTimeout(() => {
           processNextTts();
         }, 150);
@@ -129,9 +134,9 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
     });
   }, []);
 
-  const queueTtsSpeech = useCallback((text) => {
+  const queueTtsSpeech = useCallback((text, lang = 'en-IN') => {
     if (!text || !text.trim() || isTtsMutedRef.current) return;
-    ttsQueueRef.current.push(text);
+    ttsQueueRef.current.push({ text, lang });
     processNextTts();
   }, [processNextTts]);
 
@@ -195,7 +200,7 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
     };
   }, [handlePrediction]);
 
-  // --- Signer Sentence Boundary Monitor (Auto-commit after pause) ---
+  // --- Signer Sentence Boundary Monitor ---
   useEffect(() => {
     if (!isCameraActive) return;
 
@@ -206,6 +211,12 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
       const idleDuration = Date.now() - lastSignActionTimeRef.current;
       if (gestureState === GESTURE_STATES.IDLE && idleDuration >= AUTO_SPEAK_PAUSE_MS) {
         const sentenceText = currentWords.map((w) => w.word).join(' ');
+        const hindiText = currentWords
+          .map((w) => VOCABULARY_TRANSLATIONS[w.word]?.hi || w.word)
+          .join(' ');
+        
+        const currentLang = speechLangRef.current;
+        const spokenText = currentLang === 'hi-IN' ? hindiText : sentenceText;
         const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
         // Add to transcript
@@ -215,15 +226,16 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
             id: `signer-${Date.now()}`,
             sender: 'signer',
             text: sentenceText,
+            translationHi: hindiText,
             confidence: currentWords[currentWords.length - 1]?.confidence,
             timestamp: timeStr
           }
         ]);
 
-        // Queue TTS output for the hearing speaker to hear
-        queueTtsSpeech(sentenceText);
+        // Queue vocalization
+        queueTtsSpeech(spokenText, currentLang);
 
-        // Reset signer buffer
+        // Reset buffer
         setSignerWords([]);
         setCurrentPrediction(null);
         lastSignActionTimeRef.current = Date.now();
@@ -341,7 +353,7 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
     };
   }, []);
 
-  // --- Speaker Input Processing (Speech / Text -> ISL Sign Display) ---
+  // --- Speaker Input Processing ---
   const handleSpeakerSubmit = (textToProcess) => {
     const rawText = textToProcess !== undefined ? textToProcess : speakerInputText;
     const text = (rawText || '').trim();
@@ -360,7 +372,7 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
       }
     ]);
 
-    // 2. Tokenize sentence into ISL gloss and load into Signer's visual sign player
+    // 2. Tokenize sentence into ISL gloss
     const parsedTokens = tokenizeSentenceToISL(text);
     setSpeakerSignTokens(parsedTokens);
     setActiveSignTokenIndex(0);
@@ -378,11 +390,11 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
       speechService.stopListening();
       setIsListening(false);
     } else {
-      // If TTS is currently speaking, stop it so it doesn't feed back into mic
       speechService.stopSpeaking();
       setIsTtsSpeaking(false);
 
       const started = speechService.startListening({
+        lang: speechLang,
         onResult: (transcriptText) => {
           setSpeakerInputText(transcriptText);
         },
@@ -392,7 +404,6 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
         },
         onEnd: () => {
           setIsListening(false);
-          // Auto-submit recognized speech if input has content
           if (speakerInputText.trim()) {
             handleSpeakerSubmit(speakerInputText);
           }
@@ -405,7 +416,7 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
     }
   };
 
-  // Manual replay of signs from a past message
+  // Replay signs
   const handleReplaySigns = (text) => {
     const parsedTokens = tokenizeSentenceToISL(text);
     setSpeakerSignTokens(parsedTokens);
@@ -414,12 +425,12 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
     setActiveSignCaption(`Replaying: "${text}"`);
   };
 
-  // Manual replay of TTS audio
-  const handleReplayTts = (text) => {
-    queueTtsSpeech(text);
+  // Replay TTS audio
+  const handleReplayTts = (text, lang) => {
+    queueTtsSpeech(text, lang || speechLang);
   };
 
-  // --- Clear Conversation / Reset State ---
+  // Clear Conversation
   const handleClearConversation = () => {
     setTranscript([
       {
@@ -448,13 +459,11 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
     segmenterRef.current.reset();
   };
 
-  // Status checks
   const isWsConnected = wsStatus === 'connected';
-  const isBackendHealthy = backendHealth?.status === 'ok';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Top Banner: Conversation Status & Actions */}
+      {/* Top Banner: Status & Language Toggle */}
       <div
         className="card-panel"
         style={{
@@ -482,6 +491,53 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
 
         {/* Global Controls & Status Pill */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          {/* Language Selector Pill */}
+          <div
+            style={{
+              display: 'inline-flex',
+              backgroundColor: 'var(--ink)',
+              border: '1px solid var(--line)',
+              borderRadius: 'var(--radius-pill)',
+              padding: '3px',
+              gap: '2px'
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setSpeechLang('en-IN')}
+              style={{
+                backgroundColor: speechLang === 'en-IN' ? 'var(--teal)' : 'transparent',
+                color: speechLang === 'en-IN' ? '#0b221e' : 'var(--mist-light)',
+                fontWeight: 600,
+                fontSize: '11.5px',
+                cursor: 'pointer',
+                padding: '4px 10px',
+                border: 'none',
+                borderRadius: 'var(--radius-pill)',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              🇮🇳 English
+            </button>
+            <button
+              type="button"
+              onClick={() => setSpeechLang('hi-IN')}
+              style={{
+                backgroundColor: speechLang === 'hi-IN' ? 'var(--amber)' : 'transparent',
+                color: speechLang === 'hi-IN' ? '#191c28' : 'var(--mist-light)',
+                fontWeight: 600,
+                fontSize: '11.5px',
+                cursor: 'pointer',
+                padding: '4px 10px',
+                border: 'none',
+                borderRadius: 'var(--radius-pill)',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              🇮🇳 हिन्दी
+            </button>
+          </div>
+
           {/* Turn Activity Badges */}
           <div
             className={`badge ${
@@ -781,7 +837,7 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
                 Signer In-Progress Buffer
               </span>
               <span className="mono-data" style={{ fontSize: '10.5px', color: 'var(--mist)' }}>
-                Auto-speaks after 2.2s pause
+                Auto-speaks in {speechLang === 'hi-IN' ? 'हिन्दी' : 'English'} after 2.2s
               </span>
             </div>
 
@@ -798,6 +854,11 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
                     style={{ fontSize: '12px', padding: '4px 10px', animation: 'fadeIn 0.2s ease' }}
                   >
                     {wordObj.word}
+                    {speechLang === 'hi-IN' && VOCABULARY_TRANSLATIONS[wordObj.word]?.hi && (
+                      <span style={{ color: 'var(--amber)', marginLeft: '4px' }}>
+                        ({VOCABULARY_TRANSLATIONS[wordObj.word].hi})
+                      </span>
+                    )}
                     {wordObj.confidence && (
                       <span style={{ opacity: 0.7, fontSize: '9.5px', marginLeft: '4px' }}>
                         {Math.round(wordObj.confidence * 100)}%
@@ -809,7 +870,7 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
             </div>
           </div>
 
-          {/* ================= SIGN DISPLAY FOR SIGNER (SPEAKER'S WORDS) ================= */}
+          {/* Incoming Signs from Speaker */}
           {speakerSignTokens.length > 0 && (
             <div
               style={{
@@ -855,10 +916,10 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
               <span style={{ fontSize: '20px' }}>🗣️</span>
               <div>
                 <h3 style={{ fontSize: '16px', margin: 0, color: 'var(--amber)' }}>
-                  Speaker Station (English Voice)
+                  Speaker Station ({speechLang === 'hi-IN' ? 'हिन्दी Voice' : 'English Voice'})
                 </h3>
                 <span className="mono-data" style={{ fontSize: '11px', color: 'var(--mist)' }}>
-                  Web Speech STT ➔ ISL Gloss Tokenizer
+                  Web Speech STT ({speechLang}) ➔ ISL Gloss Tokenizer
                 </span>
               </div>
             </div>
@@ -888,7 +949,11 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
                 type="text"
                 value={speakerInputText}
                 onChange={(e) => setSpeakerInputText(e.target.value)}
-                placeholder="Speak into microphone or type sentence here..."
+                placeholder={
+                  speechLang === 'hi-IN'
+                    ? 'माइक में बोलें या यहाँ हिन्दी/English में टाइप करें...'
+                    : 'Speak into microphone or type sentence here...'
+                }
                 style={{
                   flex: 1,
                   padding: '12px 16px',
@@ -915,7 +980,7 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
                   backgroundColor: isListening ? 'var(--amber-subtle)' : 'var(--panel-elevated)',
                   cursor: 'pointer'
                 }}
-                title="Dictate with microphone (en-IN priority)"
+                title={`Dictate in ${speechLang === 'hi-IN' ? 'हिन्दी (hi-IN)' : 'English (en-IN)'}`}
               >
                 <span style={{ fontSize: '16px' }}>{isListening ? '🔴' : '🎙️'}</span>
                 <span>{isListening ? 'Listening...' : 'Speak'}</span>
@@ -955,27 +1020,30 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
             {/* Quick Presets */}
             <div>
               <span className="mono-eyebrow" style={{ fontSize: '10.5px', color: 'var(--mist)', display: 'block', marginBottom: '6px' }}>
-                Quick Presets:
+                Quick Presets ({speechLang === 'hi-IN' ? 'हिन्दी' : 'English'}):
               </span>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                {SPEAKER_PRESETS.map((preset) => (
-                  <button
-                    key={preset}
-                    type="button"
-                    onClick={() => handleSpeakerSubmit(preset)}
-                    className="badge"
-                    style={{
-                      cursor: 'pointer',
-                      padding: '4px 10px',
-                      fontSize: '11.5px',
-                      backgroundColor: 'var(--panel-elevated)',
-                      border: '1px solid var(--line)',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    "{preset}"
-                  </button>
-                ))}
+                {SPEAKER_PRESETS.map((preset) => {
+                  const label = speechLang === 'hi-IN' ? preset.hi : preset.en;
+                  return (
+                    <button
+                      key={preset.en}
+                      type="button"
+                      onClick={() => handleSpeakerSubmit(label)}
+                      className="badge"
+                      style={{
+                        cursor: 'pointer',
+                        padding: '4px 10px',
+                        fontSize: '11.5px',
+                        backgroundColor: 'var(--panel-elevated)',
+                        border: '1px solid var(--line)',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      "{label}"
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </form>
@@ -993,12 +1061,16 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
             }}
           >
             <div style={{ fontWeight: 600, color: 'var(--white)', marginBottom: '4px' }}>
-              💡 How Two-Way Interaction Works:
+              💡 Bilingual Multi-Modal Bridge:
             </div>
             <ul style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <li>When the <strong>Speaker</strong> talks, their words tokenize to ISL and animate on the Signer's screen.</li>
-              <li>When the <strong>Signer</strong> signs, their gestures translate to English and play aloud as audio.</li>
-              <li>TTS audio automatically pauses if the Speaker is actively talking into the mic.</li>
+              <li>
+                <strong>Speaker:</strong> Talk in English or हिन्दी — words tokenize to ISL signs automatically.
+              </li>
+              <li>
+                <strong>Signer:</strong> Gestures translate to ISL text and vocalize in selected language ({speechLang === 'hi-IN' ? 'हिन्दी' : 'English'}).
+              </li>
+              <li>Audio FIFO queue prevents voice playback while speaker microphone is active.</li>
             </ul>
           </div>
         </div>
@@ -1124,24 +1196,50 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
                     "{msg.text}"
                   </div>
 
+                  {/* Hindi Translation Subtitle for Signer turns */}
+                  {isSigner && msg.translationHi && (
+                    <div style={{ fontSize: '13px', color: 'var(--amber)', marginTop: '2px' }}>
+                      🇮🇳 हिन्दी: {msg.translationHi}
+                    </div>
+                  )}
+
                   {/* Actions (Replay Audio or Signs) */}
                   <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                     {isSigner ? (
-                      <button
-                        onClick={() => handleReplayTts(msg.text)}
-                        className="badge"
-                        style={{
-                          cursor: 'pointer',
-                          fontSize: '11px',
-                          padding: '3px 8px',
-                          backgroundColor: 'var(--panel-elevated)',
-                          borderColor: 'var(--teal)',
-                          color: 'var(--teal)'
-                        }}
-                        title="Vocalize this translation again"
-                      >
-                        🔊 Replay Voice
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleReplayTts(msg.text, 'en-IN')}
+                          className="badge"
+                          style={{
+                            cursor: 'pointer',
+                            fontSize: '11px',
+                            padding: '3px 8px',
+                            backgroundColor: 'var(--panel-elevated)',
+                            borderColor: 'var(--teal)',
+                            color: 'var(--teal)'
+                          }}
+                          title="Vocalize in English"
+                        >
+                          🔊 English Voice
+                        </button>
+                        {msg.translationHi && (
+                          <button
+                            onClick={() => handleReplayTts(msg.translationHi, 'hi-IN')}
+                            className="badge"
+                            style={{
+                              cursor: 'pointer',
+                              fontSize: '11px',
+                              padding: '3px 8px',
+                              backgroundColor: 'var(--panel-elevated)',
+                              borderColor: 'var(--amber)',
+                              color: 'var(--amber)'
+                            }}
+                            title="Vocalize in Hindi"
+                          >
+                            🔊 हिन्दी Voice
+                          </button>
+                        )}
+                      </>
                     ) : (
                       <button
                         onClick={() => handleReplaySigns(msg.text)}

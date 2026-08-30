@@ -3,14 +3,22 @@ import { tokenizeSentenceToISL } from '../utils/islDictionary';
 import { speechService } from '../services/speech';
 import ClipPlayer from './ClipPlayer';
 
-const SAMPLE_PRESETS = [
+const SAMPLE_PRESETS_EN = [
   'I want water',
   'Hello friend please help',
   'Thank you friend',
   'Food please'
 ];
 
+const SAMPLE_PRESETS_HI = [
+  'मुझे पानी चाहिए',
+  'नमस्ते दोस्त कृपया मदद करो',
+  'धन्यवाद दोस्त',
+  'खाना दीजिए'
+];
+
 export default function SpeechToSign() {
+  const [speechLang, setSpeechLang] = useState('en-IN'); // 'en-IN' | 'hi-IN'
   const [inputText, setInputText] = useState('I want water');
   const [tokens, setTokens] = useState(() => tokenizeSentenceToISL('I want water'));
   const [activeTokenIndex, setActiveTokenIndex] = useState(0);
@@ -43,6 +51,7 @@ export default function SpeechToSign() {
       setIsListening(false);
     } else {
       const started = speechService.startListening({
+        lang: speechLang,
         onResult: (transcript) => {
           setInputText(transcript);
           const parsed = tokenizeSentenceToISL(transcript);
@@ -55,7 +64,6 @@ export default function SpeechToSign() {
         },
         onEnd: () => {
           setIsListening(false);
-          // Automatically start sign playback on speech recognition completion
           setIsPlaying(true);
         }
       });
@@ -72,16 +80,69 @@ export default function SpeechToSign() {
     handleProcessText(preset);
   };
 
+  const activePresets = speechLang === 'hi-IN' ? SAMPLE_PRESETS_HI : SAMPLE_PRESETS_EN;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Input Tray & Voice Dictation Controls */}
       <div className="card-panel" style={{ padding: '24px' }}>
-        <div style={{ marginBottom: '16px' }}>
-          <span className="mono-eyebrow" style={{ color: 'var(--amber)' }}>Spoken English Input</span>
-          <h3 style={{ fontSize: '18px', marginTop: '4px' }}>Speech → Sign Translator</h3>
-          <p style={{ fontSize: '14px', marginTop: '4px' }}>
-            Speak into your microphone or type a sentence. The system tokenizes your phrase into ISL gloss and sequences the sign demonstrations.
-          </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+          <div>
+            <span className="mono-eyebrow" style={{ color: 'var(--amber)' }}>
+              Speech / Text Input ({speechLang === 'hi-IN' ? 'हिन्दी' : 'English'})
+            </span>
+            <h3 style={{ fontSize: '18px', marginTop: '4px' }}>Speech → Sign Translator</h3>
+            <p style={{ fontSize: '14px', marginTop: '4px' }}>
+              Speak into your microphone or type a sentence. The system tokenizes your phrase into ISL gloss and sequences the sign demonstrations.
+            </p>
+          </div>
+
+          {/* Language Selector */}
+          <div
+            style={{
+              display: 'inline-flex',
+              backgroundColor: 'var(--ink)',
+              border: '1px solid var(--line)',
+              borderRadius: 'var(--radius-pill)',
+              padding: '3px',
+              gap: '2px'
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setSpeechLang('en-IN')}
+              style={{
+                backgroundColor: speechLang === 'en-IN' ? 'var(--amber)' : 'transparent',
+                color: speechLang === 'en-IN' ? '#191c28' : 'var(--mist-light)',
+                fontWeight: 600,
+                fontSize: '11.5px',
+                cursor: 'pointer',
+                padding: '4px 10px',
+                border: 'none',
+                borderRadius: 'var(--radius-pill)',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              🇮🇳 English (en-IN)
+            </button>
+            <button
+              type="button"
+              onClick={() => setSpeechLang('hi-IN')}
+              style={{
+                backgroundColor: speechLang === 'hi-IN' ? 'var(--amber)' : 'transparent',
+                color: speechLang === 'hi-IN' ? '#191c28' : 'var(--mist-light)',
+                fontWeight: 600,
+                fontSize: '11.5px',
+                cursor: 'pointer',
+                padding: '4px 10px',
+                border: 'none',
+                borderRadius: 'var(--radius-pill)',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              🇮🇳 हिन्दी (hi-IN)
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -91,7 +152,11 @@ export default function SpeechToSign() {
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Type English sentence (e.g., 'I want water', 'Hello friend please help')..."
+              placeholder={
+                speechLang === 'hi-IN'
+                  ? 'हिन्दी या English में वाक्य टाइप करें (जैसे "मुझे पानी चाहिए", "नमस्ते दोस्त")...'
+                  : 'Type English sentence (e.g., "I want water", "Hello friend please help")...'
+              }
               style={{
                 flex: 1,
                 minWidth: '240px',
@@ -119,7 +184,7 @@ export default function SpeechToSign() {
                 borderColor: isListening ? 'var(--amber)' : 'var(--line)',
                 backgroundColor: isListening ? 'var(--amber-subtle)' : 'var(--panel-elevated)'
               }}
-              title="Speak sentence with microphone (Web Speech API)"
+              title={`Speak in ${speechLang === 'hi-IN' ? 'हिन्दी' : 'English'}`}
             >
               <span style={{ fontSize: '16px' }}>{isListening ? '🔴' : '🎙️'}</span>
               <span>{isListening ? 'Listening...' : 'Speak'}</span>
@@ -138,33 +203,38 @@ export default function SpeechToSign() {
 
           {/* Microphone Error Banner */}
           {micError && (
-            <div style={{
-              padding: '10px 14px',
-              backgroundColor: 'rgba(255, 106, 91, 0.1)',
-              border: '1px solid #ff6a5b',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: '13px',
-              color: '#ff6a5b'
-            }}>
+            <div
+              style={{
+                padding: '8px 14px',
+                backgroundColor: 'rgba(255, 106, 91, 0.15)',
+                border: '1px solid #ff6a5b',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '13px',
+                color: '#ff6a5b'
+              }}
+            >
               ⚠️ {micError}
             </div>
           )}
 
-          {/* Quick Preset Buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
-            <span className="mono-eyebrow" style={{ fontSize: '11px', color: 'var(--mist)' }}>Try Preset:</span>
-            {SAMPLE_PRESETS.map((preset) => (
+          {/* Preset Sample Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '4px' }}>
+            <span className="mono-data" style={{ fontSize: '12px', color: 'var(--mist)' }}>
+              Presets:
+            </span>
+            {activePresets.map((preset, idx) => (
               <button
-                key={preset}
+                key={idx}
                 type="button"
                 onClick={() => handleSelectPreset(preset)}
                 className="badge"
                 style={{
                   cursor: 'pointer',
+                  backgroundColor: 'var(--panel-elevated)',
+                  border: '1px solid var(--line)',
                   padding: '4px 10px',
-                  fontSize: '11.5px',
-                  backgroundColor: inputText === preset ? 'var(--amber-subtle)' : 'var(--panel-elevated)',
-                  borderColor: inputText === preset ? 'var(--amber)' : 'var(--line)'
+                  fontSize: '12px',
+                  transition: 'all 0.15s ease'
                 }}
               >
                 "{preset}"
@@ -174,84 +244,7 @@ export default function SpeechToSign() {
         </form>
       </div>
 
-      {/* ISL Gloss Token Sequence Highlight Strip */}
-      {tokens.length > 0 && (
-        <div style={{
-          padding: '16px 20px',
-          backgroundColor: 'var(--panel)',
-          border: '1px solid var(--line)',
-          borderRadius: 'var(--radius-md)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '10px'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="mono-eyebrow" style={{ color: 'var(--amber)' }}>
-              ISL Token Sequence ({tokens.length} signs)
-            </span>
-            <span className="mono-data" style={{ fontSize: '12px', color: 'var(--mist)' }}>
-              Click any token to jump directly to sign
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
-            {tokens.map((token, index) => {
-              const isActive = index === activeTokenIndex;
-              return (
-                <button
-                  key={token.id}
-                  type="button"
-                  onClick={() => {
-                    setActiveTokenIndex(index);
-                    setIsPlaying(true);
-                  }}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '8px 16px',
-                    borderRadius: 'var(--radius-pill)',
-                    backgroundColor: isActive
-                      ? 'var(--amber)'
-                      : token.isMatched
-                      ? 'var(--panel-elevated)'
-                      : 'rgba(255, 106, 91, 0.1)',
-                    color: isActive
-                      ? '#191c28'
-                      : token.isMatched
-                      ? 'var(--white)'
-                      : '#ff6a5b',
-                    border: `1.5px solid ${
-                      isActive
-                        ? 'var(--amber)'
-                        : token.isMatched
-                        ? 'var(--line)'
-                        : 'rgba(255, 106, 91, 0.4)'
-                    }`,
-                    fontFamily: 'var(--font-display)',
-                    fontWeight: 600,
-                    fontSize: '14.5px',
-                    boxShadow: isActive ? '0 0 16px var(--amber-glow)' : 'none',
-                    transform: isActive ? 'scale(1.06)' : 'scale(1)',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  <span>{token.word}</span>
-                  <span className="mono-data" style={{
-                    fontSize: '10px',
-                    opacity: isActive ? 0.9 : 0.6,
-                    textTransform: 'uppercase'
-                  }}>
-                    {token.isMatched ? 'ISL Gloss' : 'Fingerspell'}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Sequenced Clip Player Component */}
+      {/* Synchronized ISL Visual Demonstration Output Player */}
       <ClipPlayer
         tokens={tokens}
         activeTokenIndex={activeTokenIndex}

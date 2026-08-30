@@ -27,16 +27,19 @@ class SpeechService {
   }
 
   /**
-   * Speaks the given text using Indian English (en-IN) voice if available, otherwise en-US or system default.
+   * Speaks the given text using Indian English (en-IN) or Hindi (hi-IN) voice if available.
    * If browser SpeechSynthesis fails, falls back to the backend /api/tts endpoint.
    */
   async speak(text, options = {}) {
     if (!text || !text.trim()) return;
 
+    const lang = options.lang || 'en-IN';
     const rate = options.rate || 0.95;
     const pitch = options.pitch || 1.0;
     const onStart = options.onStart || (() => {});
     const onEnd = options.onEnd || (() => {});
+
+    const isHindi = lang.startsWith('hi');
 
     // Try browser SpeechSynthesis first
     if (this.synth) {
@@ -47,15 +50,28 @@ class SpeechService {
         utterance.rate = rate;
         utterance.pitch = pitch;
 
-        // Select Indian English voice if present, else English, else default
-        const inVoice = this.voices.find(v => v.lang === 'en-IN' || v.name.includes('India'));
-        const enVoice = this.voices.find(v => v.lang.startsWith('en'));
-        if (inVoice) {
-          utterance.voice = inVoice;
-          utterance.lang = 'en-IN';
-        } else if (enVoice) {
-          utterance.voice = enVoice;
-          utterance.lang = enVoice.lang;
+        if (isHindi) {
+          // Find Hindi voice
+          const hiVoice = this.voices.find(
+            v => v.lang === 'hi-IN' || v.lang.startsWith('hi') || v.name.toLowerCase().includes('hindi')
+          );
+          if (hiVoice) {
+            utterance.voice = hiVoice;
+            utterance.lang = hiVoice.lang;
+          } else {
+            utterance.lang = 'hi-IN';
+          }
+        } else {
+          // Select Indian English voice if present, else English, else default
+          const inVoice = this.voices.find(v => v.lang === 'en-IN' || v.name.includes('India'));
+          const enVoice = this.voices.find(v => v.lang.startsWith('en'));
+          if (inVoice) {
+            utterance.voice = inVoice;
+            utterance.lang = 'en-IN';
+          } else if (enVoice) {
+            utterance.voice = enVoice;
+            utterance.lang = enVoice.lang;
+          }
         }
 
         utterance.onstart = () => {
@@ -71,7 +87,7 @@ class SpeechService {
         utterance.onerror = (e) => {
           console.warn('[SpeechService] Browser TTS failed, falling back to backend:', e);
           this.isSpeaking = false;
-          this._fallbackBackendTTS(text, onStart, onEnd);
+          this._fallbackBackendTTS(text, lang, onStart, onEnd);
         };
 
         this.synth.speak(utterance);
@@ -82,16 +98,17 @@ class SpeechService {
     }
 
     // Fallback to backend TTS if no browser synth
-    await this._fallbackBackendTTS(text, onStart, onEnd);
+    await this._fallbackBackendTTS(text, lang, onStart, onEnd);
   }
 
-  async _fallbackBackendTTS(text, onStart, onEnd) {
+  async _fallbackBackendTTS(text, lang, onStart, onEnd) {
     try {
       onStart();
+      const backendLang = lang.startsWith('hi') ? 'hi' : 'en';
       const response = await fetch(`${API_BASE}/api/tts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, lang: 'en', tld: 'co.in' })
+        body: JSON.stringify({ text, lang: backendLang, tld: 'co.in' })
       });
 
       if (!response.ok) {
@@ -131,7 +148,7 @@ class SpeechService {
   /**
    * Initializes SpeechRecognition for Speech-to-Sign dictation.
    */
-  startListening({ onResult, onError, onEnd }) {
+  startListening({ onResult, onError, onEnd, lang = 'en-IN' }) {
     const SpeechRecognition = typeof window !== 'undefined'
       ? window.SpeechRecognition || window.webkitSpeechRecognition
       : null;
@@ -147,7 +164,7 @@ class SpeechService {
       }
 
       this.recognition = new SpeechRecognition();
-      this.recognition.lang = 'en-IN'; // Indian English voice recognition
+      this.recognition.lang = lang; // 'en-IN' or 'hi-IN'
       this.recognition.continuous = false;
       this.recognition.interimResults = true;
 
