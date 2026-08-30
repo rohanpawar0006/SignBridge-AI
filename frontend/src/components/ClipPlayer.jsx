@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import SignVectorVisualizer from './SignVectorVisualizer';
-import { getSignPhotos, hasSignPhotos } from '../utils/signPhotos';
+import { getSignPhotos, hasSignPhotos, getAlphabetPhoto } from '../utils/signPhotos';
 
 // ISL Visual Sign Details & Pedagogical motion paths for the 11 v1 vocabulary signs
 const SIGN_VISUAL_GUIDES = {
@@ -454,42 +454,83 @@ export default function ClipPlayer({
                 )}
               </div>
               );
-            })() : (
-              /* Fingerspelling Fallback Card */
+            })() : (() => {
+              const activeLetter = currentToken.letters ? currentToken.letters[fingerspellLetterIdx] : currentToken.char;
+              const letterPhoto = activeLetter ? getAlphabetPhoto(activeLetter) : null;
+
+              return (
+              /* Fingerspelling Fallback Card with Real A-Z Hand Photos */
               <div style={{
                 textAlign: 'center',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '16px',
+                gap: '12px',
                 maxWidth: '480px'
               }}>
-                <span className="badge badge-amber" style={{ fontSize: '12px' }}>
-                  Fingerspelling Fallback (Out-of-Vocabulary)
+                <span className="badge badge-amber" style={{ fontSize: '11px', padding: '3px 10px' }}>
+                  ✋ ISL Fingerspelling (Out-of-Vocabulary)
                 </span>
-                <h3 style={{ fontSize: '24px' }}>
+
+                {/* Active Letter Hand Photo */}
+                {letterPhoto ? (
+                  <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <img
+                      src={letterPhoto}
+                      alt={`Letter ${activeLetter} hand symbol`}
+                      style={{
+                        width: '180px',
+                        height: '180px',
+                        borderRadius: '20px',
+                        border: '2.5px solid var(--amber)',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.4), 0 0 16px var(--amber-glow)',
+                        objectFit: 'cover',
+                        animation: 'fadeIn 0.15s ease'
+                      }}
+                    />
+                    <div
+                      style={{
+                        position: 'absolute',
+                        bottom: '-10px',
+                        backgroundColor: 'var(--amber)',
+                        color: '#191c28',
+                        fontWeight: 800,
+                        fontSize: '18px',
+                        padding: '2px 14px',
+                        borderRadius: 'var(--radius-pill)',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                        fontFamily: 'var(--font-display)'
+                      }}
+                    >
+                      {activeLetter}
+                    </div>
+                  </div>
+                ) : null}
+
+                <h3 style={{ fontSize: '20px', marginTop: letterPhoto ? '10px' : '0', marginBottom: 0 }}>
                   Spelling: <span style={{ color: 'var(--amber)' }}>{currentToken.word}</span>
                 </h3>
 
                 {/* Individual Letter Glyph Display */}
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                  {currentToken.letters.map((letter, idx) => (
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  {currentToken.letters && currentToken.letters.map((letter, idx) => (
                     <div
                       key={idx}
                       style={{
-                        width: '48px',
-                        height: '56px',
-                        borderRadius: '10px',
+                        width: '42px',
+                        height: '48px',
+                        borderRadius: '8px',
                         backgroundColor: idx === fingerspellLetterIdx ? 'var(--amber)' : 'var(--panel-elevated)',
                         color: idx === fingerspellLetterIdx ? '#191c28' : 'var(--white)',
-                        border: `1px solid ${idx === fingerspellLetterIdx ? 'var(--amber)' : 'var(--line)'}`,
+                        border: `1.5px solid ${idx === fingerspellLetterIdx ? 'var(--amber)' : 'var(--line)'}`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontFamily: 'var(--font-display)',
                         fontWeight: 700,
-                        fontSize: '22px',
+                        fontSize: '18px',
                         transform: idx === fingerspellLetterIdx ? 'scale(1.12)' : 'scale(1)',
+                        boxShadow: idx === fingerspellLetterIdx ? '0 4px 12px var(--amber-glow)' : 'none',
                         transition: 'all 0.15s ease'
                       }}
                     >
@@ -498,11 +539,12 @@ export default function ClipPlayer({
                   ))}
                 </div>
 
-                <p style={{ fontSize: '13px', color: 'var(--mist)' }}>
-                  Active Letter: <strong>{currentToken.letters[fingerspellLetterIdx] || '-'}</strong>
-                </p>
+                <span className="mono-data" style={{ fontSize: '11.5px', color: 'var(--mist)' }}>
+                  Letter {fingerspellLetterIdx + 1} of {currentToken.letters ? currentToken.letters.length : 1}: <strong style={{ color: 'var(--amber)' }}>{activeLetter || '-'}</strong>
+                </span>
               </div>
-            )}
+              );
+            })()}
           </div>
         ) : null}
 

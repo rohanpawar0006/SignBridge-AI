@@ -19,6 +19,12 @@ const bundledSignImages = import.meta.glob('../assets/signs/*/*.jpg', {
   import: 'default'
 });
 
+// Eagerly bundle all alphabet fingerspelling photos (A-Z)
+const bundledAlphabetImages = import.meta.glob('../assets/signs/alphabet/*.jpg', {
+  eager: true,
+  import: 'default'
+});
+
 /**
  * Normalizes word key for folder naming (e.g. "THANK YOU" -> "THANK_YOU")
  */
@@ -36,6 +42,17 @@ export function getBundledSignPhoto(word, position) {
   const cleanKey = normalizeWordKey(word);
   const path = `../assets/signs/${cleanKey}/${position}.jpg`;
   return bundledSignImages[path] || null;
+}
+
+/**
+ * Retrieve bundled alphabet hand photo for an A-Z character.
+ * @param {string} letter - Single uppercase character (e.g. 'A')
+ * @returns {string|null}
+ */
+export function getAlphabetPhoto(letter) {
+  const char = (letter || '').toUpperCase().trim();
+  const path = `../assets/signs/alphabet/${char}.jpg`;
+  return bundledAlphabetImages[path] || null;
 }
 
 /**
