@@ -325,7 +325,7 @@ export default function ClipPlayer({
                       className={`badge ${wordPhotos.isCustom ? 'badge-amber' : 'badge-teal'}`}
                       style={{ fontSize: '10px', padding: '2px 8px' }}
                     >
-                      {wordPhotos.isCustom ? '📸 Custom Captured Sign' : '📷 Real ISL Gesture Photo (Kaggle Dataset)'}
+                      {wordPhotos.isCustom ? '📸 Custom Captured Hand Pose' : '✋ Hand Symbol (Kaggle ISL Dataset)'}
                     </span>
 
                     {wordPhotos.end ? (
