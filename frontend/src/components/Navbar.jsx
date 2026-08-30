@@ -210,6 +210,20 @@ export default function Navbar({ activeMode, onModeChange, backendHealth }) {
           <span className="mono-eyebrow" style={{ color: 'var(--mist)', fontSize: '11px', marginBottom: '4px' }}>
             Quick Mode Switch
           </span>
+          <button
+            onClick={() => handleModeSelect('live-conversation')}
+            className={`badge ${activeMode === 'live-conversation' ? 'badge-coral' : ''}`}
+            style={{
+              padding: '10px 12px',
+              justifyContent: 'center',
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              marginBottom: '4px'
+            }}
+          >
+            💬 Live Conversation
+          </button>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <button
               onClick={() => handleModeSelect('sign-to-speech')}

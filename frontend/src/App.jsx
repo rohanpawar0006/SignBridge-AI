@@ -8,6 +8,7 @@ import ProblemSection from './components/ProblemSection';
 import HowItWorks from './components/HowItWorks';
 import Roadmap from './components/Roadmap';
 import Footer from './components/Footer';
+import ConversationMode from './components/ConversationMode';
 import SignCapture from './components/SignCapture';
 import { fetchVocabulary, checkBackendHealth } from './services/api';
 
@@ -30,7 +31,7 @@ function useHashRoute() {
 
 export default function App() {
   const route = useHashRoute();
-  const [activeMode, setActiveMode] = useState('sign-to-speech'); // 'sign-to-speech' | 'speech-to-sign'
+  const [activeMode, setActiveMode] = useState('live-conversation'); // 'sign-to-speech' | 'speech-to-sign' | 'live-conversation'
   const [vocabList, setVocabList] = useState([]);
   const [backendHealth, setBackendHealth] = useState({ status: 'connecting' });
 
@@ -86,8 +87,18 @@ export default function App() {
       {/* Main Interactive Demo / Application Shell */}
       <section id="demo" className="section-divider" style={{ backgroundColor: 'var(--panel-subtle)' }}>
         <div className="container">
-          <div style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto 36px' }}>
-            <span className="mono-eyebrow" style={{ color: activeMode === 'sign-to-speech' ? 'var(--teal)' : 'var(--amber)' }}>
+          <div style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto 36px' }}>
+            <span
+              className="mono-eyebrow"
+              style={{
+                color:
+                  activeMode === 'sign-to-speech'
+                    ? 'var(--teal)'
+                    : activeMode === 'speech-to-sign'
+                    ? 'var(--amber)'
+                    : 'var(--coral)'
+              }}
+            >
               Interactive Translation Platform
             </span>
             <h2 style={{ marginTop: '8px', marginBottom: '12px' }}>
@@ -95,7 +106,7 @@ export default function App() {
             </h2>
             <p>
               Switch modes seamlessly below. Mode 1 runs live computer-vision edge tracking to recognize signs and speak them.
-              Mode 2 turns spoken voice and English text into sequenced sign playback.
+              Mode 2 turns spoken voice and English text into sequenced sign playback. Live Conversation unifies both into a single simultaneous back-and-forth studio.
             </p>
           </div>
 
@@ -111,8 +122,33 @@ export default function App() {
               backgroundColor: 'var(--panel)',
               border: '1px solid var(--line)',
               borderRadius: 'var(--radius-pill)',
-              gap: '6px'
+              gap: '6px',
+              flexWrap: 'wrap',
+              justifyContent: 'center'
             }}>
+              <button
+                id="tab-mode-live-conversation"
+                onClick={() => setActiveMode('live-conversation')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 22px',
+                  borderRadius: 'var(--radius-pill)',
+                  backgroundColor: activeMode === 'live-conversation' ? 'var(--coral)' : 'transparent',
+                  color: activeMode === 'live-conversation' ? '#ffffff' : 'var(--mist-light)',
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 600,
+                  fontSize: '14.5px',
+                  boxShadow: activeMode === 'live-conversation' ? '0 4px 16px var(--coral-glow)' : 'none',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer'
+                }}
+              >
+                <span>💬</span>
+                <span>Live Conversation</span>
+              </button>
+
               <button
                 id="tab-mode-sign-to-speech"
                 onClick={() => setActiveMode('sign-to-speech')}
@@ -120,7 +156,7 @@ export default function App() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  padding: '10px 24px',
+                  padding: '10px 22px',
                   borderRadius: 'var(--radius-pill)',
                   backgroundColor: activeMode === 'sign-to-speech' ? 'var(--teal)' : 'transparent',
                   color: activeMode === 'sign-to-speech' ? '#0b221e' : 'var(--mist-light)',
@@ -128,7 +164,8 @@ export default function App() {
                   fontWeight: 600,
                   fontSize: '14.5px',
                   boxShadow: activeMode === 'sign-to-speech' ? '0 4px 16px var(--teal-glow)' : 'none',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer'
                 }}
               >
                 <span>🤟</span>
@@ -142,7 +179,7 @@ export default function App() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  padding: '10px 24px',
+                  padding: '10px 22px',
                   borderRadius: 'var(--radius-pill)',
                   backgroundColor: activeMode === 'speech-to-sign' ? 'var(--amber)' : 'transparent',
                   color: activeMode === 'speech-to-sign' ? '#191c28' : 'var(--mist-light)',
@@ -150,7 +187,8 @@ export default function App() {
                   fontWeight: 600,
                   fontSize: '14.5px',
                   boxShadow: activeMode === 'speech-to-sign' ? '0 4px 16px var(--amber-glow)' : 'none',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer'
                 }}
               >
                 <span>🗣️</span>
@@ -160,8 +198,10 @@ export default function App() {
           </div>
 
           {/* Active Mode Panel Container */}
-          <div style={{ maxWidth: '960px', margin: '0 auto' }}>
-            {activeMode === 'sign-to-speech' ? (
+          <div style={{ maxWidth: activeMode === 'live-conversation' ? '1100px' : '960px', margin: '0 auto' }}>
+            {activeMode === 'live-conversation' ? (
+              <ConversationMode vocabList={vocabList} backendHealth={backendHealth} />
+            ) : activeMode === 'sign-to-speech' ? (
               <SignToSpeech vocabList={vocabList} />
             ) : (
               <SpeechToSign />

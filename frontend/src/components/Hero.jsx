@@ -37,8 +37,26 @@ export default function Hero({ activeMode, onModeChange }) {
           <BridgeCanvas activeMode={activeMode} onModeChange={onModeChange} />
         </div>
 
-        {/* CTAs for the two modes */}
+        {/* CTAs for the modes */}
         <div className="stagger-5" style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => {
+              onModeChange('live-conversation');
+              const el = document.getElementById('demo');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="btn-primary"
+            style={{
+              padding: '14px 28px',
+              fontSize: '15px',
+              backgroundColor: 'var(--coral)',
+              borderColor: 'var(--coral)',
+              boxShadow: '0 4px 20px var(--coral-glow)'
+            }}
+          >
+            💬 Launch Live Conversation
+          </button>
+
           <button
             onClick={() => {
               onModeChange('sign-to-speech');
@@ -46,9 +64,9 @@ export default function Hero({ activeMode, onModeChange }) {
               if (el) el.scrollIntoView({ behavior: 'smooth' });
             }}
             className="btn-primary btn-teal"
-            style={{ padding: '14px 28px', fontSize: '15px' }}
+            style={{ padding: '14px 24px', fontSize: '15px' }}
           >
-            🤟 Launch Sign → Speech
+            🤟 Sign → Speech
           </button>
 
           <button
@@ -58,9 +76,9 @@ export default function Hero({ activeMode, onModeChange }) {
               if (el) el.scrollIntoView({ behavior: 'smooth' });
             }}
             className="btn-primary btn-amber"
-            style={{ padding: '14px 28px', fontSize: '15px' }}
+            style={{ padding: '14px 24px', fontSize: '15px' }}
           >
-            🗣️ Launch Speech → Sign
+            🗣️ Speech → Sign
           </button>
         </div>
       </div>
