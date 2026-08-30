@@ -38,3 +38,8 @@ htmlcov/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Kaggle / Raw Downloads
+kaggle_raw/
+dataset-metadata.json
+

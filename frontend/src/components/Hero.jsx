@@ -11,7 +11,7 @@ export default function Hero({ activeMode, onModeChange }) {
         {/* Project Header Eyebrow */}
         <div className="stagger-1" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
           <span className="badge badge-coral">
-            🎓 Final-Year Major Project · BE CSE (Artificial Intelligence & Machine Learning)
+            🤟 AI-Powered Indian Sign Language Platform
           </span>
         </div>
 

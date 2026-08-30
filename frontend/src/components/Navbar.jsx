@@ -102,9 +102,7 @@ export default function Navbar({ activeMode, onModeChange, backendHealth }) {
           >
             SignBridge <span style={{ color: 'var(--coral)' }}>AI</span>
           </span>
-          <span className="badge badge-coral" style={{ fontSize: '10px', padding: '2px 8px' }}>
-            BE CSE-AI
-          </span>
+
         </a>
 
         {/* Desktop Navigation Links */}

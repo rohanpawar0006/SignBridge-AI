@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import SignVectorVisualizer from './SignVectorVisualizer';
+import { getSignPhotos, hasSignPhotos } from '../utils/signPhotos';
 
 // ISL Visual Sign Details & Pedagogical motion paths for the 11 v1 vocabulary signs
 const SIGN_VISUAL_GUIDES = {
@@ -303,23 +304,110 @@ export default function ClipPlayer({
             height: '100%',
             animation: 'fadeIn 0.25s ease'
           }}>
-            {currentToken.type === 'gloss' ? (
-              /* ISL Vocabulary Sign Animation Card */
+            {currentToken.type === 'gloss' ? (() => {
+              const wordPhotos = hasSignPhotos(currentToken.word) ? getSignPhotos(currentToken.word) : null;
+
+              return (
+              /* ISL Vocabulary Sign Card — Photo or Vector Fallback */
               <div style={{
                 textAlign: 'center',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 gap: '14px',
-                maxWidth: '480px'
+                maxWidth: '520px'
               }}>
-                {/* Dynamic Vector Kinematics Visualizer */}
-                <SignVectorVisualizer
-                  word={currentToken.word}
-                  isPlaying={isPlaying}
-                  progress={progress}
-                  accent={signGuide ? signGuide.accent : 'var(--amber)'}
-                />
+                {/* Sign Visual: Captured Photos or SVG Vector Fallback */}
+                {wordPhotos && wordPhotos.start ? (
+                  /* Captured Photo Display */
+                  wordPhotos.end ? (
+                    /* Two-Panel: Start → End */
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'stretch',
+                      gap: '12px',
+                      width: '100%',
+                      maxWidth: '440px'
+                    }}>
+                      {/* Start Position */}
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                        <span className="mono-data" style={{ fontSize: '10px', color: 'var(--teal)' }}>
+                          Start Position
+                        </span>
+                        <img
+                          src={wordPhotos.start}
+                          alt={`${currentToken.word} start position`}
+                          style={{
+                            width: '100%',
+                            maxWidth: '200px',
+                            borderRadius: '16px',
+                            border: `2px solid ${signGuide ? signGuide.accent : 'var(--teal)'}`,
+                            boxShadow: `0 4px 20px rgba(0,0,0,0.3), 0 0 12px ${signGuide ? signGuide.accent + '22' : 'rgba(45,214,192,0.13)'}`,
+                            objectFit: 'cover',
+                            aspectRatio: '4/3'
+                          }}
+                        />
+                      </div>
+
+                      {/* Arrow */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        fontSize: '24px',
+                        color: signGuide ? signGuide.accent : 'var(--amber)',
+                        fontWeight: 700,
+                        paddingTop: '20px'
+                      }}>
+                        →
+                      </div>
+
+                      {/* End Position */}
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                        <span className="mono-data" style={{ fontSize: '10px', color: 'var(--amber)' }}>
+                          End Position
+                        </span>
+                        <img
+                          src={wordPhotos.end}
+                          alt={`${currentToken.word} end position`}
+                          style={{
+                            width: '100%',
+                            maxWidth: '200px',
+                            borderRadius: '16px',
+                            border: `2px solid ${signGuide ? signGuide.accent : 'var(--amber)'}`,
+                            boxShadow: `0 4px 20px rgba(0,0,0,0.3), 0 0 12px ${signGuide ? signGuide.accent + '22' : 'rgba(246,172,63,0.13)'}`,
+                            objectFit: 'cover',
+                            aspectRatio: '4/3'
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    /* Single Photo: Start Only */
+                    <img
+                      src={wordPhotos.start}
+                      alt={`${currentToken.word} sign`}
+                      style={{
+                        width: '100%',
+                        maxWidth: '360px',
+                        borderRadius: '20px',
+                        border: `2px solid ${signGuide ? signGuide.accent : 'var(--teal)'}`,
+                        boxShadow: `0 8px 32px rgba(0,0,0,0.3), 0 0 20px ${signGuide ? signGuide.accent + '22' : 'rgba(45,214,192,0.13)'}`,
+                        objectFit: 'cover',
+                        aspectRatio: '4/3',
+                        transition: 'transform 0.2s ease',
+                        transform: isPlaying ? 'scale(1.02)' : 'scale(1)'
+                      }}
+                    />
+                  )
+                ) : (
+                  /* SVG Vector Fallback (no photos captured) */
+                  <SignVectorVisualizer
+                    word={currentToken.word}
+                    isPlaying={isPlaying}
+                    progress={progress}
+                    accent={signGuide ? signGuide.accent : 'var(--amber)'}
+                  />
+                )}
 
                 {/* Sign Gloss Name */}
                 <div>
@@ -356,7 +444,8 @@ export default function ClipPlayer({
                   </div>
                 )}
               </div>
-            ) : (
+              );
+            })() : (
               /* Fingerspelling Fallback Card */
               <div style={{
                 textAlign: 'center',

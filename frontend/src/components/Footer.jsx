@@ -86,7 +86,7 @@ export default function Footer() {
           gap: '12px'
         }}>
           <span className="mono-data" style={{ fontSize: '12.5px', color: 'var(--mist)' }}>
-            SignBridge AI · Final-Year BE CSE (AI & ML) Major Project · Tagline: Bridging Signs and Speech.
+            SignBridge AI · Bridging Signs and Speech.
           </span>
           <span className="mono-data" style={{ fontSize: '12px', color: 'var(--mist)' }}>
             Built with applied AI/ML integrity & zero mock data

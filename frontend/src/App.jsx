@@ -8,9 +8,28 @@ import ProblemSection from './components/ProblemSection';
 import HowItWorks from './components/HowItWorks';
 import Roadmap from './components/Roadmap';
 import Footer from './components/Footer';
+import SignCapture from './components/SignCapture';
 import { fetchVocabulary, checkBackendHealth } from './services/api';
 
+/**
+ * Lightweight hash-based route detection.
+ * Returns the current hash path (e.g. '/capture' for '#/capture', '' for default).
+ */
+function useHashRoute() {
+  const getPath = () => (window.location.hash || '').replace(/^#\/?/, '/').replace(/\/$/, '') || '/';
+  const [route, setRoute] = useState(getPath);
+
+  useEffect(() => {
+    const onHash = () => setRoute(getPath());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  return route;
+}
+
 export default function App() {
+  const route = useHashRoute();
   const [activeMode, setActiveMode] = useState('sign-to-speech'); // 'sign-to-speech' | 'speech-to-sign'
   const [vocabList, setVocabList] = useState([]);
   const [backendHealth, setBackendHealth] = useState({ status: 'connecting' });
@@ -38,6 +57,15 @@ export default function App() {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Dev-only capture route (not linked in public nav)
+  if (route === '/capture') {
+    return (
+      <ThemeProvider>
+        <SignCapture />
+      </ThemeProvider>
+    );
+  }
 
   return (
     <ThemeProvider>
@@ -157,3 +185,4 @@ export default function App() {
     </ThemeProvider>
   );
 }
+

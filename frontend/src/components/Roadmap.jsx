@@ -33,7 +33,7 @@ export default function Roadmap() {
       phase: 'Phase 5',
       title: 'Unified Shell & Bridge Motif',
       status: 'Completed',
-      desc: 'Dynamic traveling-pulse SVG bridge, single-page zero-reload mode toggle, and complete academic portfolio presentation.'
+      desc: 'Dynamic traveling-pulse SVG bridge, single-page zero-reload mode toggle, and complete unified platform presentation.'
     },
     {
       phase: 'Future v2',
@@ -52,7 +52,7 @@ export default function Roadmap() {
             Project Roadmap & Build Verification
           </h2>
           <p>
-            Developed in disciplined phases according to the project specifications and academic BE CSE-AI criteria.
+            Developed in disciplined phases, each delivering a verified, production-ready layer of the platform.
           </p>
         </div>
 
