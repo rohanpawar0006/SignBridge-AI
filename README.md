@@ -18,10 +18,15 @@
 
 ## 🌐 Live Production Deployments
 
+- **Frontend Web Application (Vercel)**: [https://frontend-rohanpawar0006s-projects.vercel.app](https://frontend-rohanpawar0006s-projects.vercel.app/)
+- **Backend API & WebSocket Server (Render)**: [https://signbridge-ai-qybu.onrender.com](https://signbridge-ai-qybu.onrender.com/)
+- **Backend Health Check**: [https://signbridge-ai-qybu.onrender.com/health](https://signbridge-ai-qybu.onrender.com/health)
+- **GitHub Repository & CI/CD**: [https://github.com/rohanpawar0006/SignBridge-AI](https://github.com/rohanpawar0006/SignBridge-AI)
+
 | Service | Platform | Live URL | Status |
 |---|---|---|---|
-| **Frontend Web App** | Vercel | [frontend-rohanpawar0006s-projects.vercel.app](https://frontend-rohanpawar0006s-projects.vercel.app) | ![Vercel](https://img.shields.io/badge/Deployment-Live-2dd6c0) |
-| **Backend API & WebSocket** | Render | [signbridge-ai-qybu.onrender.com](https://signbridge-ai-qybu.onrender.com) | ![Render](https://img.shields.io/badge/Server-Live-2dd6c0) |
+| **Frontend Web App** | Vercel | [frontend-rohanpawar0006s-projects.vercel.app](https://frontend-rohanpawar0006s-projects.vercel.app/) | ![Vercel](https://img.shields.io/badge/Deployment-Live-2dd6c0) |
+| **Backend API & WebSocket** | Render | [signbridge-ai-qybu.onrender.com](https://signbridge-ai-qybu.onrender.com/) | ![Render](https://img.shields.io/badge/Server-Live-2dd6c0) |
 | **Backend Health Check** | Render | [signbridge-ai-qybu.onrender.com/health](https://signbridge-ai-qybu.onrender.com/health) | ![API](https://img.shields.io/badge/Health-200%20OK-brightgreen) |
 | **GitHub Repository** | GitHub | [github.com/rohanpawar0006/SignBridge-AI](https://github.com/rohanpawar0006/SignBridge-AI) | ![CI/CD](https://img.shields.io/badge/CI%2FCD-Passing-brightgreen) |
 
