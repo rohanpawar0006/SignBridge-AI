@@ -1,7 +1,7 @@
 /**
- * SignBridge AI - Sign Photo Storage Utility
- * Manages captured hand-sign photos in localStorage.
- * Photos are stored as JPEG data-URLs keyed by word.
+ * SignBridge AI - Sign Photo Storage & Asset Loader Utility
+ * Bundles default real hand-sign demonstration photos from the Kaggle ISL dataset
+ * and manages custom user-captured overrides in localStorage.
  *
  * Storage format (localStorage key: 'signbridge_captured_signs'):
  * {
@@ -13,8 +13,33 @@
 
 const STORAGE_KEY = 'signbridge_captured_signs';
 
+// Eagerly bundle all default ISL sign photos from assets
+const bundledSignImages = import.meta.glob('../assets/signs/*/*.jpg', {
+  eager: true,
+  import: 'default'
+});
+
 /**
- * Read the full photo store from localStorage.
+ * Normalizes word key for folder naming (e.g. "THANK YOU" -> "THANK_YOU")
+ */
+function normalizeWordKey(word) {
+  return (word || '').toUpperCase().trim().replace(/\s+/g, '_');
+}
+
+/**
+ * Retrieve bundled default photo asset URL for word and position.
+ * @param {string} word - e.g. "WATER" or "THANK YOU"
+ * @param {'start'|'end'} position
+ * @returns {string|null}
+ */
+export function getBundledSignPhoto(word, position) {
+  const cleanKey = normalizeWordKey(word);
+  const path = `../assets/signs/${cleanKey}/${position}.jpg`;
+  return bundledSignImages[path] || null;
+}
+
+/**
+ * Read the full custom photo store from localStorage.
  * @returns {Object} Map of word → { start?, end? }
  */
 function readStore() {
@@ -40,21 +65,37 @@ function writeStore(store) {
 }
 
 /**
- * Get captured photos for a word.
- * @param {string} word - Sign vocabulary word (e.g. "WATER")
- * @returns {{ start: string|null, end: string|null }}
+ * Get photos for a word: custom user capture if available, else default bundled Kaggle photo.
+ * @param {string} word - Sign vocabulary word (e.g. "WATER" or "THANK YOU")
+ * @returns {{ start: string|null, end: string|null, isCustom: boolean }}
  */
 export function getSignPhotos(word) {
+  const normWord = (word || '').toUpperCase().trim();
   const store = readStore();
-  const entry = store[(word || '').toUpperCase().trim()];
+  const customEntry = store[normWord];
+
+  // 1. Custom user capture from localStorage has highest priority
+  if (customEntry && (customEntry.start || customEntry.end)) {
+    return {
+      start: customEntry.start || getBundledSignPhoto(normWord, 'start'),
+      end: customEntry.end || getBundledSignPhoto(normWord, 'end'),
+      isCustom: true
+    };
+  }
+
+  // 2. Default to bundled real ISL dataset photos
+  const defaultStart = getBundledSignPhoto(normWord, 'start');
+  const defaultEnd = getBundledSignPhoto(normWord, 'end');
+
   return {
-    start: entry?.start || null,
-    end: entry?.end || null
+    start: defaultStart,
+    end: defaultEnd,
+    isCustom: false
   };
 }
 
 /**
- * Check if a word has any captured photos.
+ * Check if a word has any photos (either custom captured or bundled default).
  * @param {string} word
  * @returns {boolean}
  */
@@ -64,7 +105,7 @@ export function hasSignPhotos(word) {
 }
 
 /**
- * Save a captured photo for a word + position.
+ * Save a captured photo for a word + position into localStorage.
  * @param {string} word - Sign vocabulary word
  * @param {'start'|'end'} position - Which phase of the sign
  * @param {string} dataUrl - JPEG data-URL string
@@ -80,7 +121,7 @@ export function saveSignPhoto(word, position, dataUrl) {
 }
 
 /**
- * Delete a specific photo for a word + position.
+ * Delete a specific custom photo for a word + position.
  * @param {string} word
  * @param {'start'|'end'} position
  */
@@ -97,7 +138,7 @@ export function deleteSignPhoto(word, position) {
 }
 
 /**
- * Get the full store (all words with photos).
+ * Get the full custom store (all words with custom photos).
  * @returns {Object}
  */
 export function getAllSignPhotos() {
@@ -105,7 +146,7 @@ export function getAllSignPhotos() {
 }
 
 /**
- * Clear all captured sign photos from localStorage.
+ * Clear all captured custom sign photos from localStorage.
  */
 export function clearAllSignPhotos() {
   try {
