@@ -9,7 +9,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-Python%203.13-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-Bi--LSTM-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![MediaPipe](https://img.shields.io/badge/CV-MediaPipe%20Hands-f6ac3f?style=for-the-badge&logo=google&logoColor=white)](https://developers.google.com/mediapipe)
-[![Dataset](https://img.shields.io/badge/Dataset-Kaggle%20ISL%20%7C%20INCLUDE-20BEFF?style=for-the-badge&logo=kaggle&logoColor=white)](https://www.kaggle.com/)
+[![Dataset](https://img.shields.io/badge/Dataset-Kaggle%20ISL%20%7C%20INCLUDE-20BEFF?style=for-the-badge&logo=kaggle&logoColor=white)](https://www.kaggle.com/datasets/ahmedkhanak1995/sign-language-gesture-images-dataset)
 [![Mendeley Data](https://img.shields.io/badge/Dataset-Mendeley%20ISL--CSLTR-FF4D4D?style=for-the-badge&logo=mendeley&logoColor=white)](https://data.mendeley.com/datasets/kcmpdxky7p/1)
 [![License](https://img.shields.io/badge/License-MIT-34D399?style=for-the-badge)](LICENSE)
 
@@ -19,7 +19,7 @@
   <a href="#-key-features"><strong>Key Features</strong></a> ·
   <a href="#-datasets--research-foundation"><strong>Datasets & Research</strong></a> ·
   <a href="#-16-sign-isl-vocabulary-catalog"><strong>ISL Catalog</strong></a> ·
-  <a href="#-quick-start"><strong>Quick Start</strong></a>
+  <a href="#-quick-start--local-setup"><strong>Quick Start</strong></a>
 </p>
 
 ---
@@ -42,6 +42,7 @@ Built with **in-browser edge computer vision**, **continuous velocity motion seg
 |---|---|:---:|---|
 | **Frontend Web Application** | **Vercel** | [![Status](https://img.shields.io/badge/Live-2dd6c0?style=flat-square)](https://frontend-rohanpawar0006s-projects.vercel.app/) | [frontend-rohanpawar0006s-projects.vercel.app](https://frontend-rohanpawar0006s-projects.vercel.app/) |
 | **Backend API & WebSocket** | **Render** | [![Status](https://img.shields.io/badge/Live-2dd6c0?style=flat-square)](https://signbridge-ai-qybu.onrender.com/) | [signbridge-ai-qybu.onrender.com](https://signbridge-ai-qybu.onrender.com/) |
+| **Interactive API Documentation** | **Swagger UI** | [![Docs](https://img.shields.io/badge/Docs-Live-46E3B7?style=flat-square)](https://signbridge-ai-qybu.onrender.com/docs) | [signbridge-ai-qybu.onrender.com/docs](https://signbridge-ai-qybu.onrender.com/docs) |
 | **System Health Check** | **Render** | [![Health](https://img.shields.io/badge/200%20OK-brightgreen?style=flat-square)](https://signbridge-ai-qybu.onrender.com/health) | [signbridge-ai-qybu.onrender.com/health](https://signbridge-ai-qybu.onrender.com/health) |
 | **Source Repository & CI/CD** | **GitHub** | [![CI/CD](https://img.shields.io/badge/Passing-brightgreen?style=flat-square)](https://github.com/rohanpawar0006/SignBridge-AI) | [github.com/rohanpawar0006/SignBridge-AI](https://github.com/rohanpawar0006/SignBridge-AI) |
 
@@ -70,7 +71,7 @@ flowchart TB
   subgraph SpeakerStation["🗣️ Spoken Language Station (Bilingual Audio)"]
     Mic["🎙️ Microphone Input"] --> STT["📝 Web Speech API STT (en-IN / hi-IN)"]
     STT --> Tokenizer["🔤 ISL Gloss NLP Tokenizer & Synonyms"]
-    Tokenizer --> ClipPlayer["🎬 ClipPlayer (Kaggle Real Hand Photos & A-Z Fallback)"]
+    Tokenizer --> ClipPlayer["🎬 ClipPlayer (Studio Hand Diagrams & A-Z Fallback)"]
   end
 
   %% Bridge Subgraph
@@ -116,7 +117,7 @@ flowchart TB
     <td width="50%" valign="top">
       <h3>🎬 ISL Visual Synthesis (Mode 2)</h3>
       <ul>
-        <li><strong>Real Kaggle Hand Symbols:</strong> Isolated, studio-enhanced hand gesture photos extracted from the Kaggle ISL dataset.</li>
+        <li><strong>Studio Hand Demonstrations:</strong> Filled anatomical hand silhouettes with glowing skeletal tracking overlays.</li>
         <li><strong>Two-Panel Playback:</strong> Clear <em>Start Position ➔ End Position</em> demonstration view.</li>
         <li><strong>A–Z Fingerspelling:</strong> Out-of-vocabulary terms dynamically trigger letter-by-letter hand poses.</li>
       </ul>
@@ -135,7 +136,7 @@ flowchart TB
       <h3>📚 Interactive ISL Dictionary & Library</h3>
       <ul>
         <li><strong>52+ Catalog Entries:</strong> Covers Alphabets (A–Z), Digits (0–9), and Phrases with search-as-you-type and category filters.</li>
-        <li><strong>Anatomical Guidance:</strong> Detailed motion descriptions and Hindi/English translations.</li>
+        <li><strong>Anatomical Guidance:</strong> Detailed motion descriptions, Hindi/English translations, and continuous sentence flows.</li>
         <li><strong>One-Click Practice Launch:</strong> Jump straight from any dictionary card into live AI camera practice.</li>
       </ul>
     </td>
@@ -221,8 +222,8 @@ SignBridge AI is built on rigorous academic and empirical research benchmarks:
 | Dataset | Type & Focus | Scale & Modality | Reference / Source |
 |---|---|---|---|
 | **ISL-CSLTR** | **Continuous Sentence Translation & Recognition** | 700 continuous videos, 18,863 frames, 1,036 word images across 100 sentences & 7 native signers | [Mendeley Data (kcmpdxky7p/1)](https://data.mendeley.com/datasets/kcmpdxky7p/1) · Funded by SERB, Govt. of India (SRG/2019/001338) |
-| **Kaggle ISL Dataset** | **Isolated Vocabulary & Keyframe Demonstrations** | 16 core conversational signs, start/end keyframe posture pairs | [Kaggle ISL Dataset](https://www.kaggle.com/) · Studio enhanced |
-| **Soumya ISL Fingerspelling** | **Alphabet (A–Z) & Counting (0–9)** | 36 static classes, 512x512 CLAHE-enhanced handshapes | [Kaggle Soumya ISL](https://www.kaggle.com/) |
+| **Kaggle ISL Dataset** | **Isolated Vocabulary & Keyframe Demonstrations** | 16 core conversational signs, start/end keyframe posture pairs | [Kaggle ISL Dataset](https://www.kaggle.com/datasets/ahmedkhanak1995/sign-language-gesture-images-dataset) |
+| **Soumya ISL Fingerspelling** | **Alphabet (A–Z) & Counting (0–9)** | 36 static classes, 512x512 CLAHE-enhanced handshapes | [Kaggle Soumya ISL](https://www.kaggle.com/datasets/soumyadipghorai/indian-sign-language-dataset) |
 
 ### 📥 Automated Dataset Download
 To download and extract the full **8.49 GB ISL-CSLTR continuous dataset**, run:
@@ -305,9 +306,10 @@ SignBridge-AI/
 ├── .github/workflows/ci.yml     # Automated CI/CD pipeline (backend tests + frontend build)
 ├── dataset/                     # 960 30-frame landmark sequences across 16 ISL classes
 ├── scripts/
-│   ├── build_hand_only_signs.py # Isolated hand symbol processor from Kaggle dataset
-│   ├── build_alphabet_photos.py # A-Z alphabet hand photo builder
-│   ├── extract_kaggle_dataset.py# MediaPipe landmark extractor from raw ISL clips
+│   ├── download_isl_csltr.py    # Automated 8.49 GB Mendeley ISL-CSLTR dataset downloader
+│   ├── extract_csltr_dataset.py # MediaPipe landmark sequence extractor from continuous videos
+│   ├── generate_hd_studio_dataset.py # Studio-grade filled hand silhouette asset generator
+│   ├── extract_kaggle_dataset.py# Landmark extractor from raw ISL clips
 │   ├── collect_dataset.py       # Dataset generator (synthetic & camera collection)
 │   ├── train_lstm.py            # PyTorch Bi-LSTM training script
 │   └── evaluate_model.py        # Model evaluation & classification report script
@@ -329,29 +331,36 @@ SignBridge-AI/
 │           ├── gesture_classifier.py # Window classifier, PyTorch inference, heuristic fallback
 │           └── clip_service.py       # Catalog query service
 └── frontend/
-    ├── package.json             # React 19, Vite, @mediapipe/hands, @mediapipe/camera_utils
+    ├── package.json             # React 19, Vite, @mediapipe/hands, canvas-confetti
     ├── vite.config.js           # Vite dev proxy configuration for /api and /ws
     ├── vercel.json              # Vercel SPA routing rewrites
     └── src/
         ├── index.css            # Modern design tokens, glassmorphism, responsive styles
-        ├── assets/signs/        # Bundled Kaggle ISL hand symbols & A-Z alphabet photos
+        ├── assets/signs/        # 68 HD Studio hand demonstrations (A-Z, 0-9, 16 Phrases)
         ├── components/
-        │   ├── Navbar.jsx       # Frosted glass header, mobile drawer, theme toggle
+        │   ├── Navbar.jsx       # Frosted glass header, GitHub link, mobile drawer, theme toggle
         │   ├── Hero.jsx         # Hero section with interactive CTA
         │   ├── BridgeCanvas.jsx # Signature animated SVG bridge with directional pulse
         │   ├── ConversationMode.jsx # Live two-way conversation split-screen studio
         │   ├── SignToSpeech.jsx # Mode 1: Continuous conversational detection, HUD, tray
         │   ├── SpeechToSign.jsx # Mode 2: Mic input, tokenizer, gloss chips, clip player
-        │   ├── ClipPlayer.jsx   # Sequenced sign player with real Kaggle hand photos
+        │   ├── SignDictionary.jsx # Interactive 52+ catalog with search & category filters
+        │   ├── PracticeStudio.jsx # Quiz challenge mode, streak bonus, confetti, mascots
+        │   ├── PredictionHUD.jsx# Real-time Top-3 candidate distribution HUD
+        │   ├── SentenceTray.jsx # Auto-append on hold sentence builder tray
+        │   ├── MascotGuides.jsx # Animated Tally, Blip, Nudge SVG mascots & tip cards
+        │   ├── ClipPlayer.jsx   # Sequenced sign player with real HD hand photos
         │   ├── CaptureStudio.jsx# Custom webcam hand pose capture tool
         │   └── SignVectorVisualizer.jsx # Custom SVG kinematics for 16 ISL signs
         ├── services/
+        │   ├── islModel.js      # On-device 36-class geometric classifier
         │   ├── mediapipe.js     # MediaPipe Hands client-side tracking service
         │   ├── websocket.js     # WebSocket client with auto-reconnection
         │   └── speech.js        # Web Speech API (STT & TTS en-IN / hi-IN / en-US fallback)
         └── utils/
+            ├── smoothing.js     # 10-frame confidence smoothing buffer
             ├── motionSegmenter.js # Real-time conversational gesture velocity segmenter
-            ├── islDictionary.js # Tokenizer, Hindi translations & synonym mappings
+            ├── islDictionary.js # Tokenizer, CSLTR continuous sentences & Hindi mappings
             └── signPhotos.js    # Bundled asset loader & localStorage capture store
 ```
 
