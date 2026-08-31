@@ -101,14 +101,14 @@ export default function Footer() {
               }}
             >
               <li>
-                • <strong>Frontend App:</strong>{' '}
+                • <strong>Live Website:</strong>{' '}
                 <a
                   href="https://frontend-rohanpawar0006s-projects.vercel.app/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ color: 'var(--teal)', textDecoration: 'underline' }}
+                  style={{ color: 'var(--teal)', textDecoration: 'underline', fontWeight: 600 }}
                 >
-                  Vercel Live
+                  signbridge-ai.vercel.app ↗
                 </a>
               </li>
               <li>

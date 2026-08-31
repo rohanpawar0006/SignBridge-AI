@@ -3,7 +3,7 @@
 # 🤟 SignBridge AI
 ### *AI-Powered Real-Time Bidirectional Indian Sign Language (ISL) Platform*
 
-[![Vercel Deployment](https://img.shields.io/badge/Frontend-Vercel%20Live-2dd6c0?style=for-the-badge&logo=vercel&logoColor=white)](https://frontend-rohanpawar0006s-projects.vercel.app/)
+[![Live Website](https://img.shields.io/badge/Live%20Website-SignBridge%20AI-2dd6c0?style=for-the-badge&logo=vercel&logoColor=white)](https://frontend-rohanpawar0006s-projects.vercel.app/)
 [![Render Server](https://img.shields.io/badge/Backend-Render%20Live-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://signbridge-ai-qybu.onrender.com/)
 [![React 19](https://img.shields.io/badge/React%2019-Vite%208-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Python%203.13-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
@@ -14,7 +14,8 @@
 [![License](https://img.shields.io/badge/License-MIT-34D399?style=for-the-badge)](LICENSE)
 
 <p align="center">
-  <a href="#-live-production-deployments"><strong>Explore Live Demo ➔</strong></a> ·
+  <a href="https://frontend-rohanpawar0006s-projects.vercel.app/"><strong>🌐 Open Live Website ➔</strong></a> ·
+  <a href="#-live-production-deployments"><strong>Deployments</strong></a> ·
   <a href="#-system-architecture"><strong>Architecture</strong></a> ·
   <a href="#-key-features"><strong>Key Features</strong></a> ·
   <a href="#-datasets--research-foundation"><strong>Datasets & Research</strong></a> ·
@@ -38,13 +39,13 @@ Built with **in-browser edge computer vision**, **continuous velocity motion seg
 
 ## 🌐 Live Production Deployments
 
-| Component | Platform | Status | URL |
+| Resource | Platform | Status | Live Link |
 |---|---|:---:|---|
-| **Frontend Web Application** | **Vercel** | [![Status](https://img.shields.io/badge/Live-2dd6c0?style=flat-square)](https://frontend-rohanpawar0006s-projects.vercel.app/) | [frontend-rohanpawar0006s-projects.vercel.app](https://frontend-rohanpawar0006s-projects.vercel.app/) |
+| **Live Website (Web App)** | **Vercel** | [![Status](https://img.shields.io/badge/Live-2dd6c0?style=flat-square)](https://frontend-rohanpawar0006s-projects.vercel.app/) | [frontend-rohanpawar0006s-projects.vercel.app](https://frontend-rohanpawar0006s-projects.vercel.app/) |
 | **Backend API & WebSocket** | **Render** | [![Status](https://img.shields.io/badge/Live-2dd6c0?style=flat-square)](https://signbridge-ai-qybu.onrender.com/) | [signbridge-ai-qybu.onrender.com](https://signbridge-ai-qybu.onrender.com/) |
-| **Interactive API Documentation** | **Swagger UI** | [![Docs](https://img.shields.io/badge/Docs-Live-46E3B7?style=flat-square)](https://signbridge-ai-qybu.onrender.com/docs) | [signbridge-ai-qybu.onrender.com/docs](https://signbridge-ai-qybu.onrender.com/docs) |
+| **Interactive Swagger API Docs** | **Swagger UI** | [![Docs](https://img.shields.io/badge/Docs-Live-46E3B7?style=flat-square)](https://signbridge-ai-qybu.onrender.com/docs) | [signbridge-ai-qybu.onrender.com/docs](https://signbridge-ai-qybu.onrender.com/docs) |
 | **System Health Check** | **Render** | [![Health](https://img.shields.io/badge/200%20OK-brightgreen?style=flat-square)](https://signbridge-ai-qybu.onrender.com/health) | [signbridge-ai-qybu.onrender.com/health](https://signbridge-ai-qybu.onrender.com/health) |
-| **Source Repository & CI/CD** | **GitHub** | [![CI/CD](https://img.shields.io/badge/Passing-brightgreen?style=flat-square)](https://github.com/rohanpawar0006/SignBridge-AI) | [github.com/rohanpawar0006/SignBridge-AI](https://github.com/rohanpawar0006/SignBridge-AI) |
+| **Source Code Repository** | **GitHub** | [![CI/CD](https://img.shields.io/badge/Passing-brightgreen?style=flat-square)](https://github.com/rohanpawar0006/SignBridge-AI) | [github.com/rohanpawar0006/SignBridge-AI](https://github.com/rohanpawar0006/SignBridge-AI) |
 
 ---
 
