@@ -25,6 +25,12 @@ const bundledAlphabetImages = import.meta.glob('../assets/signs/alphabet/*.jpg',
   import: 'default'
 });
 
+// Eagerly bundle all digits counting photos (0-9)
+const bundledDigitImages = import.meta.glob('../assets/signs/digits/*.jpg', {
+  eager: true,
+  import: 'default'
+});
+
 /**
  * Normalizes word key for folder naming (e.g. "THANK YOU" -> "THANK_YOU")
  */
@@ -53,6 +59,17 @@ export function getAlphabetPhoto(letter) {
   const char = (letter || '').toUpperCase().trim();
   const path = `../assets/signs/alphabet/${char}.jpg`;
   return bundledAlphabetImages[path] || null;
+}
+
+/**
+ * Retrieve bundled digit hand photo for a 0-9 number.
+ * @param {string|number} digit - Single digit character (e.g. '7' or 7)
+ * @returns {string|null}
+ */
+export function getDigitPhoto(digit) {
+  const char = String(digit || '').trim();
+  const path = `../assets/signs/digits/${char}.jpg`;
+  return bundledDigitImages[path] || null;
 }
 
 /**

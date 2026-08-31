@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import { MediaPipeHandTracker } from '../services/mediapipe';
 import { drawHandLandmarks } from '../utils/drawLandmarks';
-import { getSignPhotos, getAlphabetPhoto } from '../utils/signPhotos';
+import { getSignPhotos, getAlphabetPhoto, getDigitPhoto } from '../utils/signPhotos';
 import { VOCABULARY_TRANSLATIONS } from '../utils/islDictionary';
 import { islModelService } from '../services/islModel';
 import { MascotTipCard } from './MascotGuides';
@@ -107,6 +107,7 @@ export default function PracticeStudio({ initialSignCode = null }) {
   const currentModule = PRACTICE_MODULES.find((m) => m.id === selectedModuleId) || PRACTICE_MODULES[0];
   const currentSign = currentModule.signs[currentSignIndex] || currentModule.signs[0];
   const isAlphabetMode = currentModule.id === 'alphabet';
+  const isDigitsMode = currentModule.id === 'digits';
 
   // Handle initialSignCode jump from Dictionary
   useEffect(() => {
@@ -339,8 +340,9 @@ export default function PracticeStudio({ initialSignCode = null }) {
   }, []);
 
   // Fetch photos
-  const signPhotos = isAlphabetMode ? null : getSignPhotos(currentSign);
+  const signPhotos = (isAlphabetMode || isDigitsMode) ? null : getSignPhotos(currentSign);
   const letterPhoto = isAlphabetMode ? getAlphabetPhoto(currentSign) : null;
+  const digitPhoto = isDigitsMode ? getDigitPhoto(currentSign) : null;
   const pedagogy = SIGN_PEDAGOGY[currentSign] || {
     motion: `Perform standard ISL posture for '${currentSign}' in camera view.`,
     handshape: 'Standard ISL Handshape',
@@ -600,6 +602,24 @@ export default function PracticeStudio({ initialSignCode = null }) {
                 />
               ) : (
                 <div style={{ fontSize: '48px', fontWeight: 800, color: 'var(--purple)' }}>{currentSign}</div>
+              )
+            ) : isDigitsMode ? (
+              digitPhoto ? (
+                <img
+                  src={digitPhoto}
+                  alt={`ISL Digit ${currentSign}`}
+                  style={{
+                    width: '100%',
+                    maxWidth: '260px',
+                    borderRadius: '16px',
+                    border: '2px solid var(--amber)',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                    aspectRatio: '1/1',
+                    objectFit: 'cover'
+                  }}
+                />
+              ) : (
+                <div style={{ fontSize: '48px', fontWeight: 800, color: 'var(--amber)' }}>{currentSign}</div>
               )
             ) : signPhotos && signPhotos.start ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', justifyContent: 'center' }}>

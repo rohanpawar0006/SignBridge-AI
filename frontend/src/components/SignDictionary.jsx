@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { getSignPhotos, getAlphabetPhoto, hasSignPhotos } from '../utils/signPhotos';
+import { getSignPhotos, getAlphabetPhoto, getDigitPhoto, hasSignPhotos } from '../utils/signPhotos';
 
 export const DICTIONARY_ENTRIES = [
   // 16 Core Phrases / Words
@@ -332,8 +332,9 @@ export default function SignDictionary({ onSelectSignForPractice }) {
         {filteredEntries.map((entry) => {
           const styleConfig = CATEGORY_STYLES[entry.category] || CATEGORY_STYLES.phrase;
           const letterPhoto = entry.category === 'letter' ? getAlphabetPhoto(entry.code) : null;
+          const digitPhoto = entry.category === 'digit' ? getDigitPhoto(entry.code) : null;
           const wordPhotos = entry.category === 'phrase' && hasSignPhotos(entry.code) ? getSignPhotos(entry.code) : null;
-          const previewImg = letterPhoto || (wordPhotos ? wordPhotos.start : null);
+          const previewImg = letterPhoto || digitPhoto || (wordPhotos ? wordPhotos.start : null);
 
           return (
             <div
