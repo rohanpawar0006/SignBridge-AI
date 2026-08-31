@@ -102,7 +102,6 @@ export default function Navbar({ activeMode, onModeChange, backendHealth }) {
           >
             SignBridge <span style={{ color: 'var(--coral)' }}>AI</span>
           </span>
-
         </a>
 
         {/* Desktop Navigation Links */}
@@ -123,7 +122,7 @@ export default function Navbar({ activeMode, onModeChange, backendHealth }) {
 
         {/* Right Actions: Backend Status, Theme Toggle, CTA & Hamburger */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {/* Live Backend Indicator (Hidden on very small screens, shown in drawer) */}
+          {/* Live Backend Indicator */}
           <div
             className="badge nav-badge-status"
             style={{
@@ -252,20 +251,34 @@ export default function Navbar({ activeMode, onModeChange, backendHealth }) {
               🗣️ Speech → Sign
             </button>
           </div>
-          <button
-            onClick={() => handleModeSelect('practice')}
-            className={`badge ${activeMode === 'practice' ? 'badge-purple' : ''}`}
-            style={{
-              padding: '10px 12px',
-              justifyContent: 'center',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              marginTop: '4px'
-            }}
-          >
-            🎮 Practice & Learning Studio
-          </button>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <button
+              onClick={() => handleModeSelect('practice')}
+              className={`badge ${activeMode === 'practice' ? 'badge-purple' : ''}`}
+              style={{
+                padding: '10px 12px',
+                justifyContent: 'center',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
+              🎮 Practice Studio
+            </button>
+            <button
+              onClick={() => handleModeSelect('dictionary')}
+              className={`badge ${activeMode === 'dictionary' ? 'badge-teal' : ''}`}
+              style={{
+                padding: '10px 12px',
+                justifyContent: 'center',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
+              📚 ISL Dictionary
+            </button>
+          </div>
         </div>
 
         {/* Mobile Status Bar */}

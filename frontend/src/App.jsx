@@ -11,6 +11,7 @@ import Footer from './components/Footer';
 import ConversationMode from './components/ConversationMode';
 import SignCapture from './components/SignCapture';
 import PracticeStudio from './components/PracticeStudio';
+import SignDictionary from './components/SignDictionary';
 import { fetchVocabulary, checkBackendHealth } from './services/api';
 
 /**
@@ -32,7 +33,8 @@ function useHashRoute() {
 
 export default function App() {
   const route = useHashRoute();
-  const [activeMode, setActiveMode] = useState('live-conversation'); // 'sign-to-speech' | 'speech-to-sign' | 'live-conversation'
+  const [activeMode, setActiveMode] = useState('live-conversation'); // 'sign-to-speech' | 'speech-to-sign' | 'live-conversation' | 'practice' | 'dictionary'
+  const [selectedPracticeSign, setSelectedPracticeSign] = useState(null);
   const [vocabList, setVocabList] = useState([]);
   const [backendHealth, setBackendHealth] = useState({ status: 'connecting' });
 
@@ -60,6 +62,15 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleSelectSignFromDictionary = (signCode) => {
+    setSelectedPracticeSign(signCode);
+    setActiveMode('practice');
+    const demoEl = document.getElementById('demo');
+    if (demoEl) {
+      demoEl.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   // Dev-only capture route (not linked in public nav)
   if (route === '/capture') {
     return (
@@ -71,184 +82,223 @@ export default function App() {
 
   return (
     <ThemeProvider>
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--ink)' }}>
-      {/* Sticky Frosted Navbar */}
-      <Navbar
-        activeMode={activeMode}
-        onModeChange={setActiveMode}
-        backendHealth={backendHealth}
-      />
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--ink)' }}>
+        {/* Sticky Frosted Navbar */}
+        <Navbar
+          activeMode={activeMode}
+          onModeChange={setActiveMode}
+          backendHealth={backendHealth}
+        />
 
-      {/* Hero Section with Signature Animated Bridge Motif */}
-      <Hero
-        activeMode={activeMode}
-        onModeChange={setActiveMode}
-      />
+        {/* Hero Section with Signature Animated Bridge Motif */}
+        <Hero
+          activeMode={activeMode}
+          onModeChange={setActiveMode}
+        />
 
-      {/* Main Interactive Demo / Application Shell */}
-      <section id="demo" className="section-divider" style={{ backgroundColor: 'var(--panel-subtle)' }}>
-        <div className="container">
-          <div style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto 36px' }}>
-            <span
-              className="mono-eyebrow"
+        {/* Main Interactive Demo / Application Shell */}
+        <section id="demo" className="section-divider" style={{ backgroundColor: 'var(--panel-subtle)' }}>
+          <div className="container">
+            <div style={{ textAlign: 'center', maxWidth: '740px', margin: '0 auto 36px' }}>
+              <span
+                className="mono-eyebrow"
+                style={{
+                  color:
+                    activeMode === 'sign-to-speech'
+                      ? 'var(--teal)'
+                      : activeMode === 'speech-to-sign'
+                      ? 'var(--amber)'
+                      : activeMode === 'practice'
+                      ? 'var(--purple)'
+                      : activeMode === 'dictionary'
+                      ? 'var(--teal)'
+                      : 'var(--coral)'
+                }}
+              >
+                Interactive Translation & Learning Ecosystem
+              </span>
+              <h2 style={{ marginTop: '8px', marginBottom: '12px' }}>
+                Experience Real-Time Bidirectional ISL AI
+              </h2>
+              <p>
+                Switch modes seamlessly below: duplex <strong>Live Conversation</strong>, CV-powered <strong>Sign → Speech</strong> with 10-frame confidence smoothing, synthesized <strong>Speech → Sign</strong> playback, gamified <strong>Practice Studio</strong>, or explore the searchable <strong>ISL Dictionary</strong>.
+              </p>
+            </div>
+
+            {/* Unified Mode Switcher Tabs */}
+            <div
               style={{
-                color:
-                  activeMode === 'sign-to-speech'
-                    ? 'var(--teal)'
-                    : activeMode === 'speech-to-sign'
-                    ? 'var(--amber)'
-                    : 'var(--coral)'
+                display: 'flex',
+                justifyContent: 'center',
+                marginBottom: '32px'
               }}
             >
-              Interactive Translation Platform
-            </span>
-            <h2 style={{ marginTop: '8px', marginBottom: '12px' }}>
-              Experience Real-Time Bidirectional ISL
-            </h2>
-            <p>
-              Switch modes seamlessly below. Mode 1 runs live computer-vision edge tracking to recognize signs and speak them.
-              Mode 2 turns spoken voice and English text into sequenced sign playback. Live Conversation unifies both into a single simultaneous back-and-forth studio.
-            </p>
-          </div>
-
-          {/* Unified Mode Switcher Tabs */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            marginBottom: '32px'
-          }}>
-            <div style={{
-              display: 'inline-flex',
-              padding: '6px',
-              backgroundColor: 'var(--panel)',
-              border: '1px solid var(--line)',
-              borderRadius: 'var(--radius-pill)',
-              gap: '6px',
-              flexWrap: 'wrap',
-              justifyContent: 'center'
-            }}>
-              <button
-                id="tab-mode-live-conversation"
-                onClick={() => setActiveMode('live-conversation')}
+              <div
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '10px 22px',
+                  display: 'inline-flex',
+                  padding: '6px',
+                  backgroundColor: 'var(--panel)',
+                  border: '1px solid var(--line)',
                   borderRadius: 'var(--radius-pill)',
-                  backgroundColor: activeMode === 'live-conversation' ? 'var(--coral)' : 'transparent',
-                  color: activeMode === 'live-conversation' ? '#ffffff' : 'var(--mist-light)',
-                  fontFamily: 'var(--font-display)',
-                  fontWeight: 600,
-                  fontSize: '14.5px',
-                  boxShadow: activeMode === 'live-conversation' ? '0 4px 16px var(--coral-glow)' : 'none',
-                  transition: 'all 0.2s ease',
-                  cursor: 'pointer'
+                  gap: '6px',
+                  flexWrap: 'wrap',
+                  justifyContent: 'center'
                 }}
               >
-                <span>💬</span>
-                <span>Live Conversation</span>
-              </button>
+                <button
+                  id="tab-mode-live-conversation"
+                  onClick={() => setActiveMode('live-conversation')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 20px',
+                    borderRadius: 'var(--radius-pill)',
+                    backgroundColor: activeMode === 'live-conversation' ? 'var(--coral)' : 'transparent',
+                    color: activeMode === 'live-conversation' ? '#ffffff' : 'var(--mist-light)',
+                    fontFamily: 'var(--font-display)',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    boxShadow: activeMode === 'live-conversation' ? '0 4px 16px var(--coral-glow)' : 'none',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <span>💬</span>
+                  <span>Live Conversation</span>
+                </button>
 
-              <button
-                id="tab-mode-sign-to-speech"
-                onClick={() => setActiveMode('sign-to-speech')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '10px 22px',
-                  borderRadius: 'var(--radius-pill)',
-                  backgroundColor: activeMode === 'sign-to-speech' ? 'var(--teal)' : 'transparent',
-                  color: activeMode === 'sign-to-speech' ? '#0b221e' : 'var(--mist-light)',
-                  fontFamily: 'var(--font-display)',
-                  fontWeight: 600,
-                  fontSize: '14.5px',
-                  boxShadow: activeMode === 'sign-to-speech' ? '0 4px 16px var(--teal-glow)' : 'none',
-                  transition: 'all 0.2s ease',
-                  cursor: 'pointer'
-                }}
-              >
-                <span>🤟</span>
-                <span>Mode 1: Sign → Speech</span>
-              </button>
+                <button
+                  id="tab-mode-sign-to-speech"
+                  onClick={() => setActiveMode('sign-to-speech')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 20px',
+                    borderRadius: 'var(--radius-pill)',
+                    backgroundColor: activeMode === 'sign-to-speech' ? 'var(--teal)' : 'transparent',
+                    color: activeMode === 'sign-to-speech' ? '#0b221e' : 'var(--mist-light)',
+                    fontFamily: 'var(--font-display)',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    boxShadow: activeMode === 'sign-to-speech' ? '0 4px 16px var(--teal-glow)' : 'none',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <span>🤟</span>
+                  <span>Sign → Speech</span>
+                </button>
 
-              <button
-                id="tab-mode-speech-to-sign"
-                onClick={() => setActiveMode('speech-to-sign')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '10px 22px',
-                  borderRadius: 'var(--radius-pill)',
-                  backgroundColor: activeMode === 'speech-to-sign' ? 'var(--amber)' : 'transparent',
-                  color: activeMode === 'speech-to-sign' ? '#191c28' : 'var(--mist-light)',
-                  fontFamily: 'var(--font-display)',
-                  fontWeight: 600,
-                  fontSize: '14.5px',
-                  boxShadow: activeMode === 'speech-to-sign' ? '0 4px 16px var(--amber-glow)' : 'none',
-                  transition: 'all 0.2s ease',
-                  cursor: 'pointer'
-                }}
-              >
-                <span>🗣️</span>
-                <span>Mode 2: Speech → Sign</span>
-              </button>
+                <button
+                  id="tab-mode-speech-to-sign"
+                  onClick={() => setActiveMode('speech-to-sign')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 20px',
+                    borderRadius: 'var(--radius-pill)',
+                    backgroundColor: activeMode === 'speech-to-sign' ? 'var(--amber)' : 'transparent',
+                    color: activeMode === 'speech-to-sign' ? '#191c28' : 'var(--mist-light)',
+                    fontFamily: 'var(--font-display)',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    boxShadow: activeMode === 'speech-to-sign' ? '0 4px 16px var(--amber-glow)' : 'none',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <span>🗣️</span>
+                  <span>Speech → Sign</span>
+                </button>
 
-              <button
-                id="tab-mode-practice"
-                onClick={() => setActiveMode('practice')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '10px 22px',
-                  borderRadius: 'var(--radius-pill)',
-                  backgroundColor: activeMode === 'practice' ? 'var(--purple)' : 'transparent',
-                  color: activeMode === 'practice' ? '#ffffff' : 'var(--mist-light)',
-                  fontFamily: 'var(--font-display)',
-                  fontWeight: 600,
-                  fontSize: '14.5px',
-                  boxShadow: activeMode === 'practice' ? '0 4px 16px rgba(168, 85, 247, 0.3)' : 'none',
-                  transition: 'all 0.2s ease',
-                  cursor: 'pointer'
-                }}
-              >
-                <span>🎮</span>
-                <span>Practice & Learning Studio</span>
-              </button>
+                <button
+                  id="tab-mode-practice"
+                  onClick={() => setActiveMode('practice')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 20px',
+                    borderRadius: 'var(--radius-pill)',
+                    backgroundColor: activeMode === 'practice' ? 'var(--purple)' : 'transparent',
+                    color: activeMode === 'practice' ? '#ffffff' : 'var(--mist-light)',
+                    fontFamily: 'var(--font-display)',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    boxShadow: activeMode === 'practice' ? '0 4px 16px rgba(168, 85, 247, 0.3)' : 'none',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <span>🎮</span>
+                  <span>Practice Studio</span>
+                </button>
+
+                <button
+                  id="tab-mode-dictionary"
+                  onClick={() => setActiveMode('dictionary')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 20px',
+                    borderRadius: 'var(--radius-pill)',
+                    backgroundColor: activeMode === 'dictionary' ? 'var(--teal)' : 'transparent',
+                    color: activeMode === 'dictionary' ? '#0b221e' : 'var(--mist-light)',
+                    fontFamily: 'var(--font-display)',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    boxShadow: activeMode === 'dictionary' ? '0 4px 16px var(--teal-glow)' : 'none',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <span>📚</span>
+                  <span>ISL Dictionary</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Active Mode Panel Container */}
+            <div
+              style={{
+                maxWidth:
+                  activeMode === 'live-conversation' || activeMode === 'practice' || activeMode === 'dictionary'
+                    ? '1140px'
+                    : '980px',
+                margin: '0 auto'
+              }}
+            >
+              {activeMode === 'live-conversation' ? (
+                <ConversationMode vocabList={vocabList} backendHealth={backendHealth} />
+              ) : activeMode === 'sign-to-speech' ? (
+                <SignToSpeech vocabList={vocabList} />
+              ) : activeMode === 'speech-to-sign' ? (
+                <SpeechToSign />
+              ) : activeMode === 'practice' ? (
+                <PracticeStudio initialSignCode={selectedPracticeSign} />
+              ) : (
+                <SignDictionary onSelectSignForPractice={handleSelectSignFromDictionary} />
+              )}
             </div>
           </div>
+        </section>
 
-          {/* Active Mode Panel Container */}
-          <div style={{ maxWidth: activeMode === 'live-conversation' || activeMode === 'practice' ? '1100px' : '960px', margin: '0 auto' }}>
-            {activeMode === 'live-conversation' ? (
-              <ConversationMode vocabList={vocabList} backendHealth={backendHealth} />
-            ) : activeMode === 'sign-to-speech' ? (
-              <SignToSpeech vocabList={vocabList} />
-            ) : activeMode === 'speech-to-sign' ? (
-              <SpeechToSign />
-            ) : (
-              <PracticeStudio />
-            )}
-          </div>
-        </div>
-      </section>
+        {/* Problem & Motivation Section */}
+        <ProblemSection />
 
-      {/* Problem & Motivation Section */}
-      <ProblemSection />
+        {/* End-to-End Technical Architecture / How It Works */}
+        <HowItWorks />
 
-      {/* End-to-End Technical Architecture / How It Works */}
-      <HowItWorks />
+        {/* Engineering Roadmap */}
+        <Roadmap />
 
-      {/* Engineering Roadmap */}
-      <Roadmap />
-
-      {/* Footer */}
-      <Footer />
-    </div>
+        {/* Footer */}
+        <Footer />
+      </div>
     </ThemeProvider>
   );
 }
-

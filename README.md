@@ -130,6 +130,42 @@ flowchart TB
   </tr>
   <tr>
     <td width="50%" valign="top">
+      <h3>📚 Interactive ISL Dictionary & Library</h3>
+      <ul>
+        <li><strong>52+ Catalog Entries:</strong> Covers Alphabets (A–Z), Digits (0–9), and Phrases with search-as-you-type and category filters.</li>
+        <li><strong>Anatomical Guidance:</strong> Detailed motion descriptions and Hindi/English translations.</li>
+        <li><strong>One-Click Practice Launch:</strong> Jump straight from any dictionary card into live AI camera practice.</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3>⚡ On-Device 36-Class Classifier & HUD</h3>
+      <ul>
+        <li><strong>Geometric Landmark Engine:</strong> Fast client-side classification across A–Z and 0–9 with disambiguation modes.</li>
+        <li><strong>10-Frame Confidence Smoothing:</strong> Majority-voted sliding buffer for rock-solid stability.</li>
+        <li><strong>Live Prediction HUD:</strong> Shows locked/stabilizing states and Top-3 candidate probabilities.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>✍️ Sentence Tray with Auto-Append</h3>
+      <ul>
+        <li><strong>Hold-to-Append (1.2s):</strong> Steady sign poses auto-append with an animated countdown progress meter.</li>
+        <li><strong>Vocalization & Clipboard:</strong> One-click text-to-speech, backspace, space, clear, and clipboard copy.</li>
+        <li><strong>Real-Time Analytics:</strong> Live character and word count tracking.</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3>🏆 Gamified Quiz Mode & Mascots</h3>
+      <ul>
+        <li><strong>Interactive Challenge:</strong> Streak multipliers and XP scoring (+100 XP + streak bonus).</li>
+        <li><strong>Celebratory Confetti:</strong> Particle bursts via <code>canvas-confetti</code> on verified hold match.</li>
+        <li><strong>Animated Mascots:</strong> <em>Tally</em>, <em>Blip</em>, and <em>Nudge</em> provide real-time guidance tips.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
       <h3>📸 Sign Capture Studio (<code>#/capture</code>)</h3>
       <ul>
         <li><strong>In-Browser Webcam Recording:</strong> Capture custom hand poses with a 3-second countdown timer.</li>
@@ -139,9 +175,9 @@ flowchart TB
     <td width="50%" valign="top">
       <h3>🎨 Modern Responsive UI System</h3>
       <ul>
-        <li><strong>Glassmorphic Dark Mode:</strong> Deep ink aesthetics with teal and amber luminous accents.</li>
+        <li><strong>Glassmorphic Dark & Light Modes:</strong> Deep ink aesthetics, neon glows, and light mode support.</li>
         <li><strong>Animated SVG Kinematics:</strong> Dynamic Bridge canvas with traveling directional pulses.</li>
-        <li><strong>Responsive Mobile Drawer:</strong> Optimized for smartphones, tablets, and desktops.</li>
+        <li><strong>Responsive Mobile Drawer:</strong> Seamless navigation across smartphones, tablets, and desktops.</li>
       </ul>
     </td>
   </tr>

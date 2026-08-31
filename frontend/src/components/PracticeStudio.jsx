@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import confetti from 'canvas-confetti';
 import { MediaPipeHandTracker } from '../services/mediapipe';
 import { drawHandLandmarks } from '../utils/drawLandmarks';
 import { getSignPhotos, getAlphabetPhoto } from '../utils/signPhotos';
 import { VOCABULARY_TRANSLATIONS } from '../utils/islDictionary';
+import { islModelService } from '../services/islModel';
+import { MascotTipCard } from './MascotGuides';
 
 // Practice Curriculum Modules
 const PRACTICE_MODULES = [
@@ -33,6 +36,13 @@ const PRACTICE_MODULES = [
     emoji: '🔤',
     badgeColor: 'var(--purple)',
     signs: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+  },
+  {
+    id: 'digits',
+    title: '0–9 Numbers & Counting',
+    emoji: '🔢',
+    badgeColor: 'var(--amber)',
+    signs: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
   }
 ];
 
@@ -57,15 +67,23 @@ const SIGN_PEDAGOGY = {
 
 const STORAGE_KEY_PRACTICE = 'signbridge_practice_progress';
 
-export default function PracticeStudio() {
+export default function PracticeStudio({ initialSignCode = null }) {
+  // Mode: 'guided' (Curriculum) or 'quiz' (Challenge Mode)
+  const [studioSubMode, setStudioSubMode] = useState('guided');
+
   // State
   const [selectedModuleId, setSelectedModuleId] = useState('basics');
   const [currentSignIndex, setCurrentSignIndex] = useState(0);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState(null);
   const [matchScore, setMatchScore] = useState(0);
+  const [detectedSign, setDetectedSign] = useState(null);
   const [holdProgress, setHoldProgress] = useState(0); // 0 to 100
   const [isCompleted, setIsCompleted] = useState(false);
+
+  // Quiz Mode Specific State
+  const [quizScore, setQuizScore] = useState(0);
+  const [quizStreak, setQuizStreak] = useState(0);
 
   // User Stats State
   const [userStats, setUserStats] = useState(() => {
@@ -90,6 +108,24 @@ export default function PracticeStudio() {
   const currentSign = currentModule.signs[currentSignIndex] || currentModule.signs[0];
   const isAlphabetMode = currentModule.id === 'alphabet';
 
+  // Handle initialSignCode jump from Dictionary
+  useEffect(() => {
+    if (!initialSignCode) return;
+    const cleanCode = initialSignCode.toUpperCase();
+
+    // Check if it's in a module
+    for (const mod of PRACTICE_MODULES) {
+      const idx = mod.signs.indexOf(cleanCode);
+      if (idx !== -1) {
+        setSelectedModuleId(mod.id);
+        setCurrentSignIndex(idx);
+        setIsCompleted(false);
+        setHoldProgress(0);
+        return;
+      }
+    }
+  }, [initialSignCode]);
+
   // Save Stats
   const updateStats = useCallback((earnedXp, sign) => {
     setUserStats((prev) => {
@@ -107,38 +143,38 @@ export default function PracticeStudio() {
     });
   }, []);
 
-  // Compute Spatial Landmark Alignment
+  // Compute Spatial Landmark Alignment & Client Classifier Matching
   const evaluateLandmarks = useCallback((landmarks) => {
     if (!landmarks || landmarks.length < 21) {
-      return 0;
+      return { score: 0, prediction: null };
     }
 
-    // Wrist
+    // Run on-device geometry classifier
+    const modelPrediction = islModelService.predict(landmarks, 'all');
+
     const wrist = landmarks[0];
     const thumbTip = landmarks[4];
     const indexTip = landmarks[8];
     const middleTip = landmarks[12];
-    const ringTip = landmarks[16];
-    const pinkyTip = landmarks[20];
 
-    // Compute bounding span
     const xs = landmarks.map((p) => p.x);
     const ys = landmarks.map((p) => p.y);
     const spanX = Math.max(...xs) - Math.min(...xs);
     const spanY = Math.max(...ys) - Math.min(...ys);
 
-    // Calculate pose score based on sign shape heuristics
-    let score = 55;
+    let score = 50;
 
     // Finger extensions relative to wrist
     const indexExt = (wrist.y - indexTip.y) / (spanY || 1);
     const thumbExt = Math.hypot(thumbTip.x - wrist.x, thumbTip.y - wrist.y);
 
     if (spanX > 0.08 && spanY > 0.08) {
-      score += 20;
+      score += 15;
     }
 
-    if (currentSign === 'I' || currentSign === 'TIME') {
+    if (modelPrediction && modelPrediction.label === currentSign) {
+      score = Math.max(score, Math.round((modelPrediction.confidence || 0.85) * 100));
+    } else if (currentSign === 'I' || currentSign === 'TIME') {
       if (indexExt > 0.5) score += 20;
     } else if (currentSign === 'WATER' || currentSign === 'W') {
       if (indexExt > 0.4 && (wrist.y - middleTip.y) > 0.4) score += 20;
@@ -148,7 +184,28 @@ export default function PracticeStudio() {
       score += 15 + Math.min(10, Math.round(thumbExt * 20));
     }
 
-    return Math.min(98, Math.max(25, score + Math.floor(Math.random() * 4)));
+    return {
+      score: Math.min(99, Math.max(20, score)),
+      prediction: modelPrediction
+    };
+  }, [currentSign]);
+
+  const pickRandomQuizSign = useCallback(() => {
+    const allSigns = PRACTICE_MODULES.flatMap((m) => m.signs);
+    const available = allSigns.filter((s) => s !== currentSign);
+    const nextSign = available[Math.floor(Math.random() * available.length)] || allSigns[0];
+
+    // Find which module contains nextSign
+    for (const mod of PRACTICE_MODULES) {
+      const idx = mod.signs.indexOf(nextSign);
+      if (idx !== -1) {
+        setSelectedModuleId(mod.id);
+        setCurrentSignIndex(idx);
+        setIsCompleted(false);
+        setHoldProgress(0);
+        return;
+      }
+    }
   }, [currentSign]);
 
   // Frame Processing
@@ -163,36 +220,51 @@ export default function PracticeStudio() {
 
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
       const landmarks = results.multiHandLandmarks[0];
-      const rawScore = evaluateLandmarks(landmarks);
+      const { score: rawScore, prediction } = evaluateLandmarks(landmarks);
       setMatchScore(rawScore);
+      setDetectedSign(prediction?.label || null);
 
-      const isHighMatch = rawScore >= 78;
-      const color = isHighMatch ? '#2dd6c0' : rawScore >= 60 ? '#f6ac3f' : '#7e859b';
+      const isHighMatch = rawScore >= 75;
+      const color = isHighMatch ? '#2dd6c0' : rawScore >= 55 ? '#f6ac3f' : '#7e859b';
       drawHandLandmarks(ctx, landmarks, width, height, true, color);
 
-      // Hold Evaluation (Hold for 1.5 seconds at >78% match)
+      // Hold Evaluation (Hold for 1.2s at >75% match)
       if (isHighMatch) {
         if (!holdStartTimeRef.current) {
           holdStartTimeRef.current = Date.now();
         }
         const elapsed = Date.now() - holdStartTimeRef.current;
-        const progressPct = Math.min(100, Math.round((elapsed / 1500) * 100));
+        const progressPct = Math.min(100, Math.round((elapsed / 1200) * 100));
         setHoldProgress(progressPct);
 
         if (progressPct >= 100 && !isCompleted) {
           setIsCompleted(true);
-          updateStats(100, currentSign);
+          const earned = 100 + quizStreak * 25;
+          updateStats(earned, currentSign);
+          setQuizScore((s) => s + earned);
+          setQuizStreak((s) => s + 1);
+
+          // Trigger Confetti Celebration!
+          try {
+            confetti({
+              particleCount: 75,
+              spread: 70,
+              origin: { y: 0.6 }
+            });
+          } catch (_err) {}
 
           if (completedTimerRef.current) clearTimeout(completedTimerRef.current);
           completedTimerRef.current = setTimeout(() => {
             // Advance to next sign
-            if (currentSignIndex < currentModule.signs.length - 1) {
+            if (studioSubMode === 'quiz') {
+              pickRandomQuizSign();
+            } else if (currentSignIndex < currentModule.signs.length - 1) {
               setCurrentSignIndex((prev) => prev + 1);
             }
             setIsCompleted(false);
             setHoldProgress(0);
             holdStartTimeRef.current = null;
-          }, 1800);
+          }, 1600);
         }
       } else {
         holdStartTimeRef.current = null;
@@ -200,10 +272,17 @@ export default function PracticeStudio() {
       }
     } else {
       setMatchScore(0);
+      setDetectedSign(null);
       setHoldProgress(0);
       holdStartTimeRef.current = null;
     }
-  }, [evaluateLandmarks, isCompleted, updateStats, currentSign, currentSignIndex, currentModule]);
+  }, [evaluateLandmarks, isCompleted, updateStats, currentSign, currentSignIndex, currentModule, quizStreak, studioSubMode, pickRandomQuizSign]);
+
+  const resetQuiz = () => {
+    setQuizScore(0);
+    setQuizStreak(0);
+    pickRandomQuizSign();
+  };
 
   // Camera Management
   const startCamera = async () => {
@@ -263,9 +342,9 @@ export default function PracticeStudio() {
   const signPhotos = isAlphabetMode ? null : getSignPhotos(currentSign);
   const letterPhoto = isAlphabetMode ? getAlphabetPhoto(currentSign) : null;
   const pedagogy = SIGN_PEDAGOGY[currentSign] || {
-    motion: 'Perform the canonical hand shape clearly in camera view.',
+    motion: `Perform standard ISL posture for '${currentSign}' in camera view.`,
     handshape: 'Standard ISL Handshape',
-    hint: 'Center your hand within the tracking box.'
+    hint: 'Position your hand centered inside the tracking viewport.'
   };
 
   return (
@@ -285,115 +364,167 @@ export default function PracticeStudio() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span className="badge badge-purple" style={{ fontSize: '11px', padding: '3px 10px' }}>
-              INTERACTIVE AI STUDIO
+              {studioSubMode === 'quiz' ? '🏆 QUIZ CHALLENGE' : 'INTERACTIVE AI STUDIO'}
             </span>
             <h2 style={{ fontSize: '20px', margin: 0, color: 'var(--white)' }}>
-              ISL Practice & Learning Studio
+              {studioSubMode === 'quiz' ? 'ISL Live AI Sign Quiz & Challenge' : 'ISL Practice & Learning Studio'}
             </h2>
           </div>
           <p style={{ fontSize: '13.5px', color: 'var(--mist)', marginTop: '4px', margin: 0 }}>
-            Learn Indian Sign Language with real Kaggle demonstrations and receive instant AI feedback on your hand pose.
+            {studioSubMode === 'quiz'
+              ? 'Test your sign vocabulary against the live AI judge. Maintain streaks and earn XP multipliers!'
+              : 'Learn Indian Sign Language with real Kaggle demonstrations and receive instant AI feedback on your hand pose.'}
           </p>
         </div>
 
         {/* Gamification Stats Dashboard */}
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <div
-            style={{
-              padding: '6px 14px',
-              backgroundColor: 'var(--ink)',
-              border: '1px solid var(--line)',
-              borderRadius: 'var(--radius-pill)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            <span style={{ fontSize: '16px' }}>🔥</span>
-            <span className="mono-data" style={{ fontSize: '13px', color: 'var(--amber)', fontWeight: 700 }}>
-              {userStats.streak} Day Streak
-            </span>
-          </div>
+          {studioSubMode === 'quiz' ? (
+            <>
+              <div
+                style={{
+                  padding: '6px 14px',
+                  backgroundColor: 'var(--ink)',
+                  border: '1px solid var(--line)',
+                  borderRadius: 'var(--radius-pill)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span style={{ fontSize: '16px' }}>🏆</span>
+                <span className="mono-data" style={{ fontSize: '13px', color: 'var(--amber)', fontWeight: 700 }}>
+                  Score: {quizScore}
+                </span>
+              </div>
+              <div
+                style={{
+                  padding: '6px 14px',
+                  backgroundColor: 'var(--ink)',
+                  border: '1px solid var(--line)',
+                  borderRadius: 'var(--radius-pill)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span style={{ fontSize: '16px' }}>🔥</span>
+                <span className="mono-data" style={{ fontSize: '13px', color: 'var(--coral)', fontWeight: 700 }}>
+                  Streak: {quizStreak}x
+                </span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div
+                style={{
+                  padding: '6px 14px',
+                  backgroundColor: 'var(--ink)',
+                  border: '1px solid var(--line)',
+                  borderRadius: 'var(--radius-pill)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span style={{ fontSize: '16px' }}>🔥</span>
+                <span className="mono-data" style={{ fontSize: '13px', color: 'var(--amber)', fontWeight: 700 }}>
+                  {userStats.streak} Day Streak
+                </span>
+              </div>
 
-          <div
-            style={{
-              padding: '6px 14px',
-              backgroundColor: 'var(--ink)',
-              border: '1px solid var(--line)',
-              borderRadius: 'var(--radius-pill)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            <span style={{ fontSize: '16px' }}>⭐</span>
-            <span className="mono-data" style={{ fontSize: '13px', color: 'var(--teal)', fontWeight: 700 }}>
-              {userStats.xp} XP
-            </span>
-          </div>
+              <div
+                style={{
+                  padding: '6px 14px',
+                  backgroundColor: 'var(--ink)',
+                  border: '1px solid var(--line)',
+                  borderRadius: 'var(--radius-pill)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span style={{ fontSize: '16px' }}>⭐</span>
+                <span className="mono-data" style={{ fontSize: '13px', color: 'var(--teal)', fontWeight: 700 }}>
+                  {userStats.xp} XP
+                </span>
+              </div>
 
-          <div
-            style={{
-              padding: '6px 14px',
-              backgroundColor: 'var(--ink)',
-              border: '1px solid var(--line)',
-              borderRadius: 'var(--radius-pill)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
+              <div
+                style={{
+                  padding: '6px 14px',
+                  backgroundColor: 'var(--ink)',
+                  border: '1px solid var(--line)',
+                  borderRadius: 'var(--radius-pill)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span style={{ fontSize: '16px' }}>🏆</span>
+                <span className="mono-data" style={{ fontSize: '13px', color: 'var(--coral)', fontWeight: 700 }}>
+                  {userStats.masteredSigns.length} Mastered
+                </span>
+              </div>
+            </>
+          )}
+
+          {/* Sub-Mode Switcher */}
+          <button
+            onClick={() => setStudioSubMode(studioSubMode === 'guided' ? 'quiz' : 'guided')}
+            className={`btn-secondary ${studioSubMode === 'quiz' ? 'badge-amber' : ''}`}
+            style={{ padding: '6px 14px', fontSize: '12.5px' }}
           >
-            <span style={{ fontSize: '16px' }}>🏆</span>
-            <span className="mono-data" style={{ fontSize: '13px', color: 'var(--coral)', fontWeight: 700 }}>
-              {userStats.masteredSigns.length} Mastered
-            </span>
-          </div>
+            {studioSubMode === 'quiz' ? '📖 Guided Lessons' : '🎯 Quiz Mode'}
+          </button>
         </div>
       </div>
 
-      {/* Curriculum Module Selector Pills */}
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-        {PRACTICE_MODULES.map((mod) => (
-          <button
-            key={mod.id}
-            onClick={() => {
-              setSelectedModuleId(mod.id);
-              setCurrentSignIndex(0);
-              setIsCompleted(false);
-              setHoldProgress(0);
-            }}
-            style={{
-              padding: '10px 18px',
-              borderRadius: 'var(--radius-md)',
-              border: `1.5px solid ${selectedModuleId === mod.id ? mod.badgeColor : 'var(--line)'}`,
-              backgroundColor: selectedModuleId === mod.id ? 'var(--panel-elevated)' : 'var(--panel)',
-              color: selectedModuleId === mod.id ? 'var(--white)' : 'var(--mist-light)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: '13.5px',
-              boxShadow: selectedModuleId === mod.id ? `0 4px 16px ${mod.badgeColor}22` : 'none',
-              transition: 'all 0.15s ease'
-            }}
-          >
-            <span style={{ fontSize: '16px' }}>{mod.emoji}</span>
-            <span>{mod.title}</span>
-            <span
-              className="badge"
+      {/* Curriculum Module Selector Pills (in Guided Mode) */}
+      {studioSubMode === 'guided' && (
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          {PRACTICE_MODULES.map((mod) => (
+            <button
+              key={mod.id}
+              onClick={() => {
+                setSelectedModuleId(mod.id);
+                setCurrentSignIndex(0);
+                setIsCompleted(false);
+                setHoldProgress(0);
+              }}
               style={{
-                fontSize: '10.5px',
-                padding: '2px 6px',
-                backgroundColor: 'var(--ink)',
-                borderColor: 'var(--line)'
+                padding: '10px 18px',
+                borderRadius: 'var(--radius-md)',
+                border: `1.5px solid ${selectedModuleId === mod.id ? mod.badgeColor : 'var(--line)'}`,
+                backgroundColor: selectedModuleId === mod.id ? 'var(--panel-elevated)' : 'var(--panel)',
+                color: selectedModuleId === mod.id ? 'var(--white)' : 'var(--mist-light)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: '13.5px',
+                boxShadow: selectedModuleId === mod.id ? `0 4px 16px ${mod.badgeColor}22` : 'none',
+                transition: 'all 0.15s ease'
               }}
             >
-              {mod.signs.length} signs
-            </span>
-          </button>
-        ))}
-      </div>
+              <span style={{ fontSize: '16px' }}>{mod.emoji}</span>
+              <span>{mod.title}</span>
+              <span
+                className="badge"
+                style={{
+                  fontSize: '10.5px',
+                  padding: '2px 6px',
+                  backgroundColor: 'var(--ink)',
+                  borderColor: 'var(--line)'
+                }}
+              >
+                {mod.signs.length} signs
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Interactive Studio Workspace (Left: Target Demonstration, Right: Live Camera AI Evaluation) */}
       <div
@@ -411,14 +542,14 @@ export default function PracticeStudio() {
             display: 'flex',
             flexDirection: 'column',
             gap: '16px',
-            borderTop: '3px solid var(--teal)'
+            borderTop: `3px solid ${studioSubMode === 'quiz' ? 'var(--coral)' : 'var(--teal)'}`
           }}
         >
           {/* Header & Sign Selector */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <span className="mono-eyebrow" style={{ color: 'var(--teal)' }}>
-                Target Sign ({currentSignIndex + 1} of {currentModule.signs.length})
+              <span className="mono-eyebrow" style={{ color: studioSubMode === 'quiz' ? 'var(--coral)' : 'var(--teal)' }}>
+                {studioSubMode === 'quiz' ? 'Active Challenge Sign' : `Target Sign (${currentSignIndex + 1} of ${currentModule.signs.length})`}
               </span>
               <h3 style={{ fontSize: '26px', margin: '4px 0 0 0', color: 'var(--white)' }}>
                 {currentSign}
@@ -453,7 +584,6 @@ export default function PracticeStudio() {
             }}
           >
             {isAlphabetMode ? (
-              /* A-Z Letter Photo */
               letterPhoto ? (
                 <img
                   src={letterPhoto}
@@ -472,7 +602,6 @@ export default function PracticeStudio() {
                 <div style={{ fontSize: '48px', fontWeight: 800, color: 'var(--purple)' }}>{currentSign}</div>
               )
             ) : signPhotos && signPhotos.start ? (
-              /* Word Start ➔ End Photo Pair */
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', justifyContent: 'center' }}>
                 <div style={{ textAlign: 'center' }}>
                   <span className="mono-data" style={{ fontSize: '10.5px', color: 'var(--teal)', display: 'block', marginBottom: '4px' }}>
@@ -516,11 +645,25 @@ export default function PracticeStudio() {
                 )}
               </div>
             ) : (
-              <div style={{ padding: '30px', color: 'var(--mist)' }}>Demonstration asset loading...</div>
+              <div
+                style={{
+                  width: '100%',
+                  height: '180px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '54px',
+                  fontWeight: 800,
+                  color: 'var(--teal)'
+                }}
+              >
+                {currentSign}
+              </div>
             )}
 
             <span className="badge" style={{ fontSize: '10.5px', backgroundColor: 'var(--ink)', borderColor: 'var(--line)' }}>
-              ✋ Kaggle ISL Studio Reference
+              ✋ ISL Demonstration Standard
             </span>
           </div>
 
@@ -547,51 +690,75 @@ export default function PracticeStudio() {
             </div>
           </div>
 
-          {/* Navigation Controls */}
+          {/* Mascot Tip Box */}
+          <MascotTipCard
+            mascot={studioSubMode === 'quiz' ? 'tally' : matchScore > 60 ? 'blip' : 'nudge'}
+            title={studioSubMode === 'quiz' ? 'Quiz Evaluation Mode' : 'AI Trainer Tip'}
+            tip={
+              matchScore >= 75
+                ? 'Great form! Hold steady to confirm.'
+                : `Form '${currentSign}' inside the camera box with clear lighting.`
+            }
+          />
+
+          {/* Navigation / Quiz Controls */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <button
-              onClick={() => {
-                if (currentSignIndex > 0) {
-                  setCurrentSignIndex((prev) => prev - 1);
-                  setIsCompleted(false);
-                  setHoldProgress(0);
-                }
-              }}
-              disabled={currentSignIndex === 0}
-              className="btn-secondary"
-              style={{
-                padding: '8px 16px',
-                fontSize: '12.5px',
-                opacity: currentSignIndex === 0 ? 0.4 : 1,
-                cursor: currentSignIndex === 0 ? 'not-allowed' : 'pointer'
-              }}
-            >
-              ◀ Previous
-            </button>
+            {studioSubMode === 'quiz' ? (
+              <>
+                <button onClick={resetQuiz} className="btn-secondary" style={{ padding: '8px 14px', fontSize: '12.5px' }}>
+                  🔄 Reset Quiz
+                </button>
+                <button onClick={pickRandomQuizSign} className="btn-primary btn-coral" style={{ padding: '8px 16px', fontSize: '12.5px' }}>
+                  Skip / Next Sign ➔
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    if (currentSignIndex > 0) {
+                      setCurrentSignIndex((prev) => prev - 1);
+                      setIsCompleted(false);
+                      setHoldProgress(0);
+                    }
+                  }}
+                  disabled={currentSignIndex === 0}
+                  className="btn-secondary"
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: '12.5px',
+                    opacity: currentSignIndex === 0 ? 0.4 : 1,
+                    cursor: currentSignIndex === 0 ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  ◀ Previous
+                </button>
 
-            <span className="mono-data" style={{ fontSize: '12px', color: 'var(--mist)' }}>
-              {currentSignIndex + 1} / {currentModule.signs.length}
-            </span>
+                <span className="mono-data" style={{ fontSize: '12px', color: 'var(--mist)' }}>
+                  {currentSignIndex + 1} / {currentModule.signs.length}
+                </span>
 
-            <button
-              onClick={() => {
-                if (currentSignIndex < currentModule.signs.length - 1) {
-                  setCurrentSignIndex((prev) => prev + 1);
-                  setIsCompleted(false);
-                  setHoldProgress(0);
-                }
-              }}
-              disabled={currentSignIndex === currentModule.signs.length - 1}
-              className="btn-secondary"
-              style={{
-                padding: '8px 16px',
-                fontSize: '12.5px',
-                opacity: currentSignIndex === currentModule.signs.length - 1 ? 0.4 : 1,
-                cursor: currentSignIndex === currentModule.signs.length - 1 ? 'not-allowed' : 'pointer'
-              }}
-            >
-              Next ▶
-            </button>
+                <button
+                  onClick={() => {
+                    if (currentSignIndex < currentModule.signs.length - 1) {
+                      setCurrentSignIndex((prev) => prev + 1);
+                      setIsCompleted(false);
+                      setHoldProgress(0);
+                    }
+                  }}
+                  disabled={currentSignIndex === currentModule.signs.length - 1}
+                  className="btn-secondary"
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: '12.5px',
+                    opacity: currentSignIndex === currentModule.signs.length - 1 ? 0.4 : 1,
+                    cursor: currentSignIndex === currentModule.signs.length - 1 ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  Next ▶
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -645,9 +812,9 @@ export default function PracticeStudio() {
               border: `2px solid ${
                 isCompleted
                   ? 'var(--teal)'
-                  : matchScore >= 78
+                  : matchScore >= 75
                   ? 'var(--teal)'
-                  : matchScore >= 60
+                  : matchScore >= 55
                   ? 'var(--amber)'
                   : 'var(--line)'
               }`,
@@ -723,10 +890,10 @@ export default function PracticeStudio() {
               >
                 <div style={{ fontSize: '52px', marginBottom: '8px' }}>🎉</div>
                 <h3 style={{ fontSize: '24px', color: '#ffffff', margin: 0, fontWeight: 800 }}>
-                  EXCELLENT MATCH!
+                  PERFECT MATCH!
                 </h3>
                 <span className="badge badge-teal" style={{ marginTop: '8px', fontSize: '13px', padding: '4px 14px' }}>
-                  +100 XP Earned!
+                  +{100 + quizStreak * 25} XP Earned!
                 </span>
               </div>
             )}
@@ -747,13 +914,13 @@ export default function PracticeStudio() {
               >
                 <span
                   className={`badge ${
-                    matchScore >= 78 ? 'badge-teal' : matchScore >= 60 ? 'badge-amber' : ''
+                    matchScore >= 75 ? 'badge-teal' : matchScore >= 55 ? 'badge-amber' : ''
                   }`}
                   style={{ fontSize: '11px', backdropFilter: 'blur(6px)' }}
                 >
-                  {matchScore >= 78
+                  {matchScore >= 75
                     ? '✓ EXCELLENT POSE'
-                    : matchScore >= 60
+                    : matchScore >= 55
                     ? '○ ADJUSTING POSE'
                     : '○ SHOW HAND IN FRAME'}
                 </span>
@@ -763,13 +930,13 @@ export default function PracticeStudio() {
                   style={{
                     fontSize: '12px',
                     fontWeight: 700,
-                    color: matchScore >= 78 ? 'var(--teal)' : 'var(--white)',
+                    color: matchScore >= 75 ? 'var(--teal)' : 'var(--white)',
                     backgroundColor: 'rgba(0,0,0,0.6)',
                     padding: '3px 10px',
                     borderRadius: '4px'
                   }}
                 >
-                  {matchScore}% Match
+                  {detectedSign ? `Detected: ${detectedSign} (${matchScore}%)` : `${matchScore}% Match`}
                 </span>
               </div>
             )}
@@ -807,8 +974,8 @@ export default function PracticeStudio() {
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span className="mono-eyebrow" style={{ fontSize: '11px', color: matchScore >= 78 ? 'var(--teal)' : 'var(--mist)' }}>
-                  {matchScore >= 78 ? 'Hold Steady for 1.5s' : 'Pose Alignment Progress'}
+                <span className="mono-eyebrow" style={{ fontSize: '11px', color: matchScore >= 75 ? 'var(--teal)' : 'var(--mist)' }}>
+                  {matchScore >= 75 ? 'Hold Steady for 1.2s' : 'Pose Alignment Progress'}
                 </span>
                 <span className="mono-data" style={{ fontSize: '11.5px', color: 'var(--white)' }}>
                   {holdProgress}% Held

@@ -47,6 +47,10 @@
   --coral: #ff6a5b;
   --coral-glow: rgba(255, 106, 91, 0.22);
   --coral-subtle: rgba(255, 106, 91, 0.08);
+
+  --purple: #a855f7;
+  --purple-glow: rgba(168, 85, 247, 0.25);
+  --purple-subtle: rgba(168, 85, 247, 0.10);
   
   /* Text & Tone Tokens */
   --mist: #8c93ab;
@@ -82,6 +86,10 @@
   --coral: #e8513f;
   --coral-glow: rgba(232, 81, 63, 0.22);
   --coral-subtle: rgba(232, 81, 63, 0.10);
+
+  --purple: #9333ea;
+  --purple-glow: rgba(147, 51, 234, 0.25);
+  --purple-subtle: rgba(147, 51, 234, 0.10);
 
   /* Text & Tone Tokens */
   --mist: #5c6380;
@@ -274,6 +282,12 @@ textarea:focus-visible {
   color: var(--coral);
 }
 
+.badge-purple {
+  background: var(--purple-subtle);
+  border-color: rgba(168, 85, 247, 0.3);
+  color: var(--purple);
+}
+
 /* ── Buttons ── */
 .btn-primary {
   display: inline-flex;
@@ -288,6 +302,7 @@ textarea:focus-visible {
   font-size: 15px;
   border: 1px solid transparent;
   transition: all var(--duration-fast) var(--ease-standard);
+  cursor: pointer;
 }
 
 .btn-primary:hover {
@@ -309,6 +324,7 @@ textarea:focus-visible {
   font-size: 15px;
   border: 1px solid var(--line);
   transition: all var(--duration-fast) var(--ease-standard);
+  cursor: pointer;
 }
 
 .btn-secondary:hover {
@@ -323,19 +339,41 @@ textarea:focus-visible {
 }
 
 .btn-teal:hover {
-  background-color: #38e2cc;
-  box-shadow: 0 4px 16px var(--teal-glow);
+  background-color: #26c2ad;
+  box-shadow: 0 4px 20px var(--teal-glow);
 }
 
 .btn-amber {
   background-color: var(--amber);
-  color: #2b1d06;
+  color: #191c28;
   font-weight: 600;
 }
 
 .btn-amber:hover {
-  background-color: #fabc5c;
-  box-shadow: 0 4px 16px var(--amber-glow);
+  background-color: #e59d32;
+  box-shadow: 0 4px 20px var(--amber-glow);
+}
+
+.btn-coral {
+  background-color: var(--coral);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.btn-coral:hover {
+  background-color: #ff5543;
+  box-shadow: 0 4px 20px var(--coral-glow);
+}
+
+.btn-purple {
+  background-color: var(--purple);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.btn-purple:hover {
+  background-color: #9333ea;
+  box-shadow: 0 4px 20px var(--purple-glow);
 }
 
 /* ── Light theme button text overrides ── */
