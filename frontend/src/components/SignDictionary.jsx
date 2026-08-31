@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { getSignPhotos, getAlphabetPhoto, getDigitPhoto, hasSignPhotos } from '../utils/signPhotos';
+import { CSLTR_SENTENCES } from '../utils/islDictionary';
 
 export const DICTIONARY_ENTRIES = [
   // 16 Core Phrases / Words
@@ -153,6 +154,17 @@ export const DICTIONARY_ENTRIES = [
     hindi: `संख्या ${i}`,
     description: `Standard Indian Sign Language (ISL) finger counting posture for digit ${i}.`,
     handshape: `Digit Counting '${i}'`
+  })),
+
+  // ISL-CSLTR Continuous Sentence Corpus (Mendeley SERB Dataset)
+  ...CSLTR_SENTENCES.map((item) => ({
+    code: item.sentence,
+    label: item.sentence,
+    category: 'sentence',
+    hindi: item.hi,
+    description: `Continuous ISL sentence composed of sequential signs: ${item.glosses.join(' ➔ ')}.`,
+    handshape: `Continuous Gloss: [${item.glosses.join('] [')}]`,
+    glosses: item.glosses
   }))
 ];
 
@@ -174,6 +186,12 @@ const CATEGORY_STYLES = {
     color: 'var(--amber)',
     glow: 'var(--amber-glow)',
     border: 'var(--amber)'
+  },
+  sentence: {
+    badge: 'badge-coral',
+    color: 'var(--coral)',
+    glow: 'var(--coral-glow)',
+    border: 'var(--coral)'
   }
 };
 
@@ -281,8 +299,9 @@ export default function SignDictionary({ onSelectSignForPractice }) {
         {/* Category Filter Pills */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {[
-            { id: 'all', label: 'All Signs', count: DICTIONARY_ENTRIES.length },
+            { id: 'all', label: 'All Catalog', count: DICTIONARY_ENTRIES.length },
             { id: 'phrase', label: 'Phrases & Words', count: 16 },
+            { id: 'sentence', label: '💬 Sentences (ISL-CSLTR)', count: CSLTR_SENTENCES.length },
             { id: 'letter', label: 'Letters (A–Z)', count: 26 },
             { id: 'digit', label: 'Digits (0–9)', count: 10 }
           ].map((cat) => (
@@ -396,10 +415,28 @@ export default function SignDictionary({ onSelectSignForPractice }) {
                   alignItems: 'center',
                   justifyContent: 'center',
                   overflow: 'hidden',
-                  position: 'relative'
+                  position: 'relative',
+                  padding: entry.category === 'sentence' ? '12px' : 0
                 }}
               >
-                {previewImg ? (
+                {entry.category === 'sentence' ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '100%' }}>
+                    <span className="mono-eyebrow" style={{ fontSize: '10px', color: 'var(--coral)' }}>
+                      Continuous Gesture Chain:
+                    </span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center' }}>
+                      {entry.glosses?.map((g, idx) => (
+                        <span
+                          key={idx}
+                          className="badge badge-teal"
+                          style={{ fontSize: '11px', padding: '3px 8px', fontWeight: 700 }}
+                        >
+                          {g}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : previewImg ? (
                   <img
                     src={previewImg}
                     alt={entry.label}

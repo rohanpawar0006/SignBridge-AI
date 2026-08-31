@@ -31,6 +31,27 @@ const PRACTICE_MODULES = [
     signs: ['FRIEND', 'NAME', 'TIME', 'GOOD']
   },
   {
+    id: 'healthcare',
+    title: 'Healthcare & Emergency (ISL-CSLTR)',
+    emoji: '🏥',
+    badgeColor: 'var(--coral)',
+    signs: ['HELP', 'WATER', 'FOOD', 'STOP', 'TIME', 'PLEASE']
+  },
+  {
+    id: 'classroom',
+    title: 'Education & Learning (ISL-CSLTR)',
+    emoji: '🏫',
+    badgeColor: 'var(--teal)',
+    signs: ['NAME', 'TIME', 'GOOD', 'FRIEND', 'YES', 'NO']
+  },
+  {
+    id: 'travel',
+    title: 'Travel & Public Places (ISL-CSLTR)',
+    emoji: '🧭',
+    badgeColor: 'var(--amber)',
+    signs: ['HELLO', 'I', 'WANT', 'HELP', 'TIME', 'THANK YOU']
+  },
+  {
     id: 'alphabet',
     title: 'A–Z Fingerspelling Mastery',
     emoji: '🔤',

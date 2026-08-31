@@ -367,3 +367,57 @@ export function tokenizeSentenceToISL(text) {
 
   return tokens;
 }
+
+/**
+ * ISL-CSLTR Continuous Sentence Corpus
+ * 40+ high-frequency benchmark sentences from the SERB ISL-CSLTR Mendeley Dataset.
+ */
+export const CSLTR_SENTENCES = [
+  // Greetings & Introductions
+  { id: 'csltr_1', sentence: 'How are you?', glosses: ['HOW', 'YOU'], hi: 'आप कैसे हैं?', category: 'greeting' },
+  { id: 'csltr_2', sentence: 'What is your name?', glosses: ['NAME', 'YOUR', 'WHAT'], hi: 'आपका नाम क्या है?', category: 'greeting' },
+  { id: 'csltr_3', sentence: 'My name is Friend', glosses: ['MY', 'NAME', 'FRIEND'], hi: 'मेरा नाम दोस्त है', category: 'greeting' },
+  { id: 'csltr_4', sentence: 'Nice to meet you', glosses: ['MEET', 'YOU', 'GOOD'], hi: 'आपसे मिलकर खुशी हुई', category: 'greeting' },
+  { id: 'csltr_5', sentence: 'Where are you going?', glosses: ['YOU', 'WHERE', 'GO'], hi: 'आप कहाँ जा रहे हैं?', category: 'greeting' },
+  { id: 'csltr_6', sentence: 'See you tomorrow', glosses: ['TIME', 'TOMORROW', 'MEET'], hi: 'कल मिलते हैं', category: 'greeting' },
+
+  // Daily Needs & Assistance
+  { id: 'csltr_7', sentence: 'I want water', glosses: ['I', 'WATER', 'WANT'], hi: 'मुझे पानी चाहिए', category: 'need' },
+  { id: 'csltr_8', sentence: 'Please give me food', glosses: ['PLEASE', 'FOOD', 'WANT'], hi: 'कृपया मुझे खाना दें', category: 'need' },
+  { id: 'csltr_9', sentence: 'Please help me', glosses: ['PLEASE', 'I', 'HELP'], hi: 'कृपया मेरी मदद करें', category: 'need' },
+  { id: 'csltr_10', sentence: 'What is the time?', glosses: ['TIME', 'WHAT'], hi: 'समय क्या हुआ है?', category: 'need' },
+  { id: 'csltr_11', sentence: 'Please stop here', glosses: ['PLEASE', 'STOP'], hi: 'कृपया यहाँ रुकिए', category: 'need' },
+  { id: 'csltr_12', sentence: 'I need assistance', glosses: ['I', 'HELP', 'WANT'], hi: 'मुझे सहायता चाहिए', category: 'need' },
+
+  // Healthcare & Medical
+  { id: 'csltr_13', sentence: 'I am feeling sick', glosses: ['I', 'SICK', 'FEEL'], hi: 'मेरी तबियत ठीक नहीं है', category: 'medical' },
+  { id: 'csltr_14', sentence: 'Call a doctor immediately', glosses: ['DOCTOR', 'CALL', 'FAST'], hi: 'तुरंत डॉक्टर को बुलाओ', category: 'medical' },
+  { id: 'csltr_15', sentence: 'Where is the hospital?', glosses: ['HOSPITAL', 'WHERE'], hi: 'अस्पताल कहाँ है?', category: 'medical' },
+  { id: 'csltr_16', sentence: 'Take medicine on time', glosses: ['MEDICINE', 'TIME', 'EAT'], hi: 'समय पर दवाई लें', category: 'medical' },
+  { id: 'csltr_17', sentence: 'Call the ambulance', glosses: ['AMBULANCE', 'CALL'], hi: 'एम्बुलेंस को बुलाओ', category: 'medical' },
+  { id: 'csltr_18', sentence: 'I have severe pain', glosses: ['I', 'PAIN', 'HAVE'], hi: 'मुझे तेज़ दर्द है', category: 'medical' },
+
+  // Education & Classroom
+  { id: 'csltr_19', sentence: 'Open your book', glosses: ['BOOK', 'OPEN'], hi: 'अपनी किताब खोलो', category: 'education' },
+  { id: 'csltr_20', sentence: 'Read the lesson', glosses: ['LESSON', 'READ'], hi: 'पाठ पढ़ो', category: 'education' },
+  { id: 'csltr_21', sentence: 'Write the answer', glosses: ['ANSWER', 'WRITE'], hi: 'उत्तर लिखो', category: 'education' },
+  { id: 'csltr_22', sentence: 'Do you understand?', glosses: ['UNDERSTAND', 'YOU'], hi: 'क्या आप समझे?', category: 'education' },
+  { id: 'csltr_23', sentence: 'I have a question', glosses: ['I', 'QUESTION', 'HAVE'], hi: 'मेरा एक सवाल है', category: 'education' },
+  { id: 'csltr_24', sentence: 'Learn Indian Sign Language', glosses: ['SIGN', 'LANGUAGE', 'LEARN'], hi: 'सांकेतिक भाषा सीखें', category: 'education' },
+
+  // Travel & Directions
+  { id: 'csltr_25', sentence: 'Where is the railway station?', glosses: ['TRAIN', 'STATION', 'WHERE'], hi: 'रेलवे स्टेशन कहाँ है?', category: 'travel' },
+  { id: 'csltr_26', sentence: 'I want to buy a ticket', glosses: ['TICKET', 'BUY', 'I', 'WANT'], hi: 'मैं टिकट खरीदना चाहता हूँ', category: 'travel' },
+  { id: 'csltr_27', sentence: 'Turn left at the signal', glosses: ['SIGNAL', 'LEFT', 'TURN'], hi: 'सिग्नल पर बाएं मुड़ें', category: 'travel' },
+  { id: 'csltr_28', sentence: 'Where is the bus stop?', glosses: ['BUS', 'STOP', 'WHERE'], hi: 'बस स्टॉप कहाँ है?', category: 'travel' },
+  { id: 'csltr_29', sentence: 'How much is the fare?', glosses: ['MONEY', 'HOW', 'MUCH'], hi: 'किराया कितना है?', category: 'travel' },
+  { id: 'csltr_30', sentence: 'Where is the entrance gate?', glosses: ['GATE', 'ENTRY', 'WHERE'], hi: 'प्रवेश द्वार कहाँ है?', category: 'travel' },
+
+  // Emotions & Social Life
+  { id: 'csltr_31', sentence: 'I am very happy today', glosses: ['TODAY', 'I', 'GOOD', 'HAPPY'], hi: 'मैं आज बहुत खुश हूँ', category: 'social' },
+  { id: 'csltr_32', sentence: 'He is my good friend', glosses: ['HE', 'MY', 'GOOD', 'FRIEND'], hi: 'वह मेरा अच्छा दोस्त है', category: 'social' },
+  { id: 'csltr_33', sentence: 'Thank you for your help', glosses: ['HELP', 'THANK YOU'], hi: 'आपकी मदद के लिए धन्यवाद', category: 'social' },
+  { id: 'csltr_34', sentence: 'I am very sorry', glosses: ['I', 'SORRY'], hi: 'मुझे बहुत खेद है', category: 'social' },
+  { id: 'csltr_35', sentence: 'Yes, that is correct', glosses: ['YES', 'GOOD'], hi: 'हाँ, यह सही है', category: 'social' },
+  { id: 'csltr_36', sentence: 'No, that is not possible', glosses: ['NO', 'STOP'], hi: 'नहीं, यह संभव नहीं है', category: 'social' }
+];

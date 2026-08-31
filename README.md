@@ -10,12 +10,14 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-Bi--LSTM-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![MediaPipe](https://img.shields.io/badge/CV-MediaPipe%20Hands-f6ac3f?style=for-the-badge&logo=google&logoColor=white)](https://developers.google.com/mediapipe)
 [![Dataset](https://img.shields.io/badge/Dataset-Kaggle%20ISL%20%7C%20INCLUDE-20BEFF?style=for-the-badge&logo=kaggle&logoColor=white)](https://www.kaggle.com/)
+[![Mendeley Data](https://img.shields.io/badge/Dataset-Mendeley%20ISL--CSLTR-FF4D4D?style=for-the-badge&logo=mendeley&logoColor=white)](https://data.mendeley.com/datasets/kcmpdxky7p/1)
 [![License](https://img.shields.io/badge/License-MIT-34D399?style=for-the-badge)](LICENSE)
 
 <p align="center">
   <a href="#-live-production-deployments"><strong>Explore Live Demo ➔</strong></a> ·
   <a href="#-system-architecture"><strong>Architecture</strong></a> ·
   <a href="#-key-features"><strong>Key Features</strong></a> ·
+  <a href="#-datasets--research-foundation"><strong>Datasets & Research</strong></a> ·
   <a href="#-16-sign-isl-vocabulary-catalog"><strong>ISL Catalog</strong></a> ·
   <a href="#-quick-start"><strong>Quick Start</strong></a>
 </p>
@@ -209,6 +211,28 @@ flowchart TB
 | 16 | **`STOP`** | Command | रुको | Flat vertical palm chopping downward into horizontal palm |
 
 </div>
+
+---
+
+## 📚 Datasets & Research Foundation
+
+SignBridge AI is built on rigorous academic and empirical research benchmarks:
+
+| Dataset | Type & Focus | Scale & Modality | Reference / Source |
+|---|---|---|---|
+| **ISL-CSLTR** | **Continuous Sentence Translation & Recognition** | 700 continuous videos, 18,863 frames, 1,036 word images across 100 sentences & 7 native signers | [Mendeley Data (kcmpdxky7p/1)](https://data.mendeley.com/datasets/kcmpdxky7p/1) · Funded by SERB, Govt. of India (SRG/2019/001338) |
+| **Kaggle ISL Dataset** | **Isolated Vocabulary & Keyframe Demonstrations** | 16 core conversational signs, start/end keyframe posture pairs | [Kaggle ISL Dataset](https://www.kaggle.com/) · Studio enhanced |
+| **Soumya ISL Fingerspelling** | **Alphabet (A–Z) & Counting (0–9)** | 36 static classes, 512x512 CLAHE-enhanced handshapes | [Kaggle Soumya ISL](https://www.kaggle.com/) |
+
+### 📥 Automated Dataset Download
+To download and extract the full **8.49 GB ISL-CSLTR continuous dataset**, run:
+```bash
+# Downloads and extracts ISL_CSLRT_Corpus.zip with resumable streaming
+python scripts/download_isl_csltr.py
+
+# Extracts 30-frame MediaPipe landmark sequences from continuous videos
+python scripts/extract_csltr_dataset.py
+```
 
 ---
 
