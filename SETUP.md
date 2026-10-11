@@ -74,12 +74,13 @@ python "d:/SignBridge AI/backend/test_backend.py"
 ```
 
 All 6 test cases should pass:
-1. `[PASS] /health endpoint passed`
-2. `[PASS] /api/vocab endpoint passed (11 locked words verified)`
+1. `[PASS] /health endpoint passed (16 words verified)`
+2. `[PASS] /api/vocab endpoint passed (16 words verified)`
 3. `[PASS] /api/clips catalog endpoint passed`
-4. `[PASS] PyTorch LSTM forward pass verified with shape torch.Size([2, 11])`
-5. `[PASS] GestureClassifier heuristic detected: {'word': 'YES', 'confidence': 0.92, 'source': 'heuristic'}`
-6. `[PASS] WebSocket /ws/gesture stream passed with payload: {'word': 'YES', 'confidence': 0.92, 'source': 'heuristic'}`
+4. `[PASS] PyTorch LSTM forward pass verified with shape torch.Size([2, 16])`
+5. `[PASS] GestureClassifier output verified with payload: {'word': 'WANT', 'confidence': 0.99, 'source': 'model', 'status': 'recognized'}`
+6. `[PASS] GestureClassifier explicit heuristic fallback detected: {'word': 'YES', 'confidence': 0.92, 'source': 'heuristic', 'status': 'recognized'}`
+7. `[PASS] WebSocket /ws/gesture stream passed with payload: {'word': 'WANT', 'confidence': 0.99, 'source': 'model', 'status': 'recognized'}`
 
 ---
 
@@ -125,9 +126,9 @@ The platform is designed for drop-in weight replacement without restructuring co
 
 1. Train a model matching the specifications:
    - **Input shape**: `(batch_size, sequence_length=30, num_features=63)`
-   - **Architecture**: `ISLGestureLSTM` (`input_size=63, hidden_size=128, num_layers=2, num_classes=11, bidirectional=True`)
-   - **Classes**: Exactly matches the 11 locked v1 words in order:
-     `0: I, 1: WANT, 2: WATER, 3: HELP, 4: THANK YOU, 5: YES, 6: NO, 7: PLEASE, 8: HELLO, 9: FRIEND, 10: FOOD`
+   - **Architecture**: `ISLGestureLSTM` (`input_size=63, hidden_size=128, num_layers=2, num_classes=16, bidirectional=True`)
+   - **Classes**: Exactly matches the 16 vocabulary words in order:
+     `0: I, 1: WANT, 2: WATER, 3: HELP, 4: THANK YOU, 5: YES, 6: NO, 7: PLEASE, 8: HELLO, 9: FRIEND, 10: FOOD, 11: GOOD, 12: SORRY, 13: TIME, 14: NAME, 15: STOP`
 
 2. Save your trained state dictionary:
    ```python
@@ -148,6 +149,6 @@ The platform is designed for drop-in weight replacement without restructuring co
 To add custom recorded sign video clips:
 
 1. Drop MP4 files into `frontend/public/clips/`:
-   - `i.mp4`, `want.mp4`, `water.mp4`, `help.mp4`, `thank_you.mp4`, `yes.mp4`, `no.mp4`, `please.mp4`, `hello.mp4`, `friend.mp4`, `food.mp4`.
+   - `i.mp4`, `want.mp4`, `water.mp4`, `help.mp4`, `thank_you.mp4`, `yes.mp4`, `no.mp4`, `please.mp4`, `hello.mp4`, `friend.mp4`, `food.mp4`, `good.mp4`, `sorry.mp4`, `time.mp4`, `name.mp4`, `stop.mp4`.
 
 2. The `ClipPlayer` component will automatically detect and play the recorded video files or fallback gracefully to the interactive animated vector sign demonstration cards.
