@@ -146,7 +146,6 @@ export default function ClipPlayer({
   const [progress, setProgress] = useState(0); // 0 to 100%
   const [fingerspellLetterIdx, setFingerspellLetterIdx] = useState(0);
 
-  const videoRef = useRef(null);
   const timerRef = useRef(null);
   const progressTimerRef = useRef(null);
 
@@ -206,7 +205,7 @@ export default function ClipPlayer({
       if (timerRef.current) clearTimeout(timerRef.current);
       if (progressTimerRef.current) clearInterval(progressTimerRef.current);
     };
-  }, [isPlaying, activeTokenIndex, tokens, speed, isLooping, currentToken]);
+  }, [isPlaying, activeTokenIndex, tokens, speed, isLooping, currentToken, onActiveTokenChange, onPlayStateChange]);
 
   // Controls
   const togglePlay = () => {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../hooks/useTheme';
 
 export default function Navbar({ activeMode, onModeChange, backendHealth }) {
   const { theme, toggleTheme } = useTheme();

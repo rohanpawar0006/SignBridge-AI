@@ -160,7 +160,9 @@ export default function PracticeStudio({ initialSignCode = null }) {
       };
       try {
         localStorage.setItem(STORAGE_KEY_PRACTICE, JSON.stringify(updated));
-      } catch (e) {}
+      } catch {
+        // Storage unavailable
+      }
       return updated;
     });
   }, []);
@@ -273,7 +275,9 @@ export default function PracticeStudio({ initialSignCode = null }) {
               spread: 70,
               origin: { y: 0.6 }
             });
-          } catch (_err) {}
+          } catch {
+            // Confetti optional
+          }
 
           if (completedTimerRef.current) clearTimeout(completedTimerRef.current);
           completedTimerRef.current = setTimeout(() => {

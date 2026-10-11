@@ -74,7 +74,7 @@ export class GestureWebSocket {
         }
       };
 
-      this.ws.onclose = (event) => {
+      this.ws.onclose = (_event) => {
         this.isConnected = false;
         this._updateStatus('disconnected');
         if (!this.isExplicitlyClosed) {

@@ -93,7 +93,7 @@ export function normalizeGlossTokens(rawTokens) {
  * @param {string} targetLang - Target language ('en-IN' | 'hi-IN' | 'both')
  * @returns {object} Translation result with natural sentences and linguistic metadata
  */
-export function translateISLGloss(rawInput, targetLang = 'both') {
+export function translateISLGloss(rawInput, _targetLang = 'both') {
   const tokens = normalizeGlossTokens(rawInput);
 
   if (tokens.length === 0) {
@@ -109,7 +109,6 @@ export function translateISLGloss(rawInput, targetLang = 'both') {
   }
 
   const rawGloss = tokens.join(' ');
-  const tokenSet = new Set(tokens);
   const n = tokens.length;
 
   // -------------------------------------------------------------

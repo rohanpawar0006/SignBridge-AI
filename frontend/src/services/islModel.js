@@ -62,11 +62,11 @@ class ISLModelService {
     if (!landmarks) return null;
 
     const wrist = landmarks[0];
-    const thumbCmc = landmarks[1], thumbMcp = landmarks[2], thumbIp = landmarks[3], thumbTip = landmarks[4];
-    const indexMcp = landmarks[5], indexPip = landmarks[6], indexDip = landmarks[7], indexTip = landmarks[8];
-    const middleMcp = landmarks[9], middlePip = landmarks[10], middleDip = landmarks[11], middleTip = landmarks[12];
-    const ringMcp = landmarks[13], ringPip = landmarks[14], ringDip = landmarks[15], ringTip = landmarks[16];
-    const pinkyMcp = landmarks[17], pinkyPip = landmarks[18], pinkyDip = landmarks[19], pinkyTip = landmarks[20];
+    const thumbTip = landmarks[4];
+    const indexMcp = landmarks[5], indexPip = landmarks[6], indexTip = landmarks[8];
+    const middleMcp = landmarks[9], middlePip = landmarks[10], middleTip = landmarks[12];
+    const ringPip = landmarks[14], ringTip = landmarks[16];
+    const pinkyMcp = landmarks[17], pinkyPip = landmarks[18], pinkyTip = landmarks[20];
 
     // Reference scale: distance between wrist and middle MCP
     const handScale = Math.max(0.05, this.dist(wrist, middleMcp));

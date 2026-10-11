@@ -25,7 +25,6 @@ export default function SignCapture() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const trackerRef = useRef(null);
-  const animFrameRef = useRef(null);
 
   // Refresh photos state from localStorage
   const refreshPhotos = useCallback(() => {
@@ -91,12 +90,10 @@ export default function SignCapture() {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (trackerRef.current) {
-        trackerRef.current.stop();
+      const tracker = trackerRef.current;
+      if (tracker) {
+        tracker.stop();
         trackerRef.current = null;
-      }
-      if (animFrameRef.current) {
-        cancelAnimationFrame(animFrameRef.current);
       }
     };
   }, []);

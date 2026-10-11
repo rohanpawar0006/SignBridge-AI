@@ -204,7 +204,9 @@ class SpeechService {
     if (this.recognition) {
       try {
         this.recognition.stop();
-      } catch (e) {}
+      } catch {
+        // Recognition already stopped
+      }
       this.isListening = false;
     }
   }

@@ -27,19 +27,19 @@ export default function SentenceTray({
     return translateISLGloss(text);
   }, [text]);
 
-  // Sync with externalSentence if controlled
-  useEffect(() => {
-    if (externalSentence !== undefined && externalSentence !== text) {
-      setText(externalSentence);
-    }
-  }, [externalSentence]);
-
-  const updateText = (newText) => {
+  const updateText = useCallback((newText) => {
     setText(newText);
     if (onSentenceChange) {
       onSentenceChange(newText);
     }
-  };
+  }, [onSentenceChange]);
+
+  // Sync with externalSentence if controlled
+  useEffect(() => {
+    if (externalSentence !== undefined) {
+      setText((prev) => (externalSentence !== prev ? externalSentence : prev));
+    }
+  }, [externalSentence]);
 
   // Handle Auto-Append timer
   useEffect(() => {
@@ -78,7 +78,7 @@ export default function SentenceTray({
     return () => {
       if (animationFrame) cancelAnimationFrame(animationFrame);
     };
-  }, [autoAppend, isStable, currentLetter, text, onAppendLetter]);
+  }, [autoAppend, isStable, currentLetter, text, onAppendLetter, updateText]);
 
   const handleManualAppend = () => {
     if (currentLetter) {

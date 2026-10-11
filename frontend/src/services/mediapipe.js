@@ -12,7 +12,7 @@ async function loadScript(src) {
     script.src = src;
     script.crossOrigin = 'anonymous';
     script.onload = () => resolve();
-    script.onerror = (e) => reject(new Error(`Failed to load script ${src}`));
+    script.onerror = () => reject(new Error(`Failed to load script ${src}`));
     document.head.appendChild(script);
   });
 }

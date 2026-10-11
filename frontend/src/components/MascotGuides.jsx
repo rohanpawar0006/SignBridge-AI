@@ -76,7 +76,7 @@ export function TallyAvatar({ size = 'md', className = '', mood = 'neutral' }) {
 /**
  * Blip - Signal Vision & Detection Feedback Mascot
  */
-export function BlipAvatar({ size = 'md', className = '', active = false, confidence = 0 }) {
+export function BlipAvatar({ size = 'md', className = '', active = false, _confidence = 0 }) {
   const sizeMap = {
     sm: { width: '32px', height: '32px' },
     md: { width: '44px', height: '44px' },

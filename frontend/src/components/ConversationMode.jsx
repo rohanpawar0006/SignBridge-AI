@@ -20,7 +20,7 @@ const SPEAKER_PRESETS = [
   { en: 'Stop food', hi: 'खाना रुको' }
 ];
 
-export default function ConversationMode({ vocabList = [], backendHealth }) {
+export default function ConversationMode({ _vocabList = [], _backendHealth }) {
   // --- Language State ---
   const [speechLang, setSpeechLang] = useState('en-IN'); // 'en-IN' | 'hi-IN'
 
@@ -32,7 +32,6 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
   const [gestureState, setGestureState] = useState(GESTURE_STATES.IDLE);
   const [liveVelocity, setLiveVelocity] = useState(0);
   const [unrecognizedNotice, setUnrecognizedNotice] = useState(null);
-  const [currentPrediction, setCurrentPrediction] = useState(null);
   const [signerWords, setSignerWords] = useState([]);
 
   // --- Speaker State (Mic + STT) ---
@@ -87,23 +86,6 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
     speechLangRef.current = speechLang;
   }, [speechLang]);
 
-  useEffect(() => {
-    isListeningRef.current = isListening;
-    if (!isListening) {
-      processNextTts();
-    }
-  }, [isListening]);
-
-  useEffect(() => {
-    isTtsMutedRef.current = isTtsMuted;
-  }, [isTtsMuted]);
-
-  useEffect(() => {
-    if (transcriptEndRef.current) {
-      transcriptEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [transcript]);
-
   // --- TTS Audio FIFO Queue Arbitration ---
   const processNextTts = useCallback(() => {
     if (isProcessingTtsRef.current) return;
@@ -134,6 +116,23 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
       }
     });
   }, []);
+
+  useEffect(() => {
+    isListeningRef.current = isListening;
+    if (!isListening) {
+      processNextTts();
+    }
+  }, [isListening, processNextTts]);
+
+  useEffect(() => {
+    isTtsMutedRef.current = isTtsMuted;
+  }, [isTtsMuted]);
+
+  useEffect(() => {
+    if (transcriptEndRef.current) {
+      transcriptEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [transcript]);
 
   const queueTtsSpeech = useCallback((text, lang = 'en-IN') => {
     if (!text || !text.trim() || isTtsMutedRef.current) return;
@@ -166,7 +165,6 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
       }
 
       setUnrecognizedNotice(null);
-      setCurrentPrediction(prediction);
       lastSignActionTimeRef.current = Date.now();
 
       // Append word to in-progress signer buffer
@@ -241,7 +239,6 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
 
         // Reset buffer
         setSignerWords([]);
-        setCurrentPrediction(null);
         lastSignActionTimeRef.current = Date.now();
       }
     }, 300);

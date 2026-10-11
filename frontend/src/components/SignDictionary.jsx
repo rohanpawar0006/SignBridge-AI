@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { getSignPhotos, getAlphabetPhoto, getDigitPhoto, hasSignPhotos } from '../utils/signPhotos';
 import { CSLTR_SENTENCES } from '../utils/islDictionary';
 
-export const DICTIONARY_ENTRIES = [
+const DICTIONARY_ENTRIES = [
   // 16 Core Phrases / Words
   {
     code: 'HELLO',

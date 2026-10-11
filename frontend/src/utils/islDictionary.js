@@ -309,7 +309,7 @@ export function tokenizeSentenceToISL(text) {
 
   let normalized = text.toLowerCase().trim();
   // Remove common punctuation except apostrophes
-  normalized = normalized.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, ' ');
+  normalized = normalized.replace(/[.,/#!$%^&*;:{}=\-_`~()?"']/g, ' ');
 
   const tokens = [];
   

@@ -2,15 +2,13 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MediaPipeHandTracker } from '../services/mediapipe';
 import { GestureWebSocket } from '../services/websocket';
 import { drawHandLandmarks } from '../utils/drawLandmarks';
-import { speechService } from '../services/speech';
-import { MotionSegmenter, GESTURE_STATES, MOTION_CONFIG } from '../utils/motionSegmenter';
+import { MotionSegmenter, GESTURE_STATES } from '../utils/motionSegmenter';
 import { ConfidenceSmoother } from '../utils/smoothing';
 import { islModelService } from '../services/islModel';
 import PredictionHUD from './PredictionHUD';
 import SentenceTray from './SentenceTray';
 import { MascotTipCard } from './MascotGuides';
 
-const AUTO_SPEAK_PAUSE_MS = 2500;
 const MIN_CONFIDENCE_THRESHOLD = 0.60;
 
 export default function SignToSpeech({ vocabList = [] }) {
@@ -28,7 +26,6 @@ export default function SignToSpeech({ vocabList = [] }) {
   const [liveVelocity, setLiveVelocity] = useState(0);
   const [isHandPresent, setIsHandPresent] = useState(false);
   const [unrecognizedNotice, setUnrecognizedNotice] = useState(null);
-  const [autoSpeakNotification, setAutoSpeakNotification] = useState(null);
 
   // Predictions
   const [rawPrediction, setRawPrediction] = useState(null);
@@ -175,7 +172,6 @@ export default function SignToSpeech({ vocabList = [] }) {
   const startDetection = async () => {
     setCameraError(null);
     setUnrecognizedNotice(null);
-    setAutoSpeakNotification(null);
     if (!videoRef.current) return;
 
     try {
@@ -515,6 +511,22 @@ export default function SignToSpeech({ vocabList = [] }) {
               </div>
             )}
           </div>
+
+          {/* Unrecognized Gesture Feedback Banner */}
+          {unrecognizedNotice && (
+            <div
+              style={{
+                padding: '8px 12px',
+                backgroundColor: 'rgba(246, 172, 63, 0.12)',
+                border: '1px solid var(--amber)',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '12px',
+                color: 'var(--amber)'
+              }}
+            >
+              ℹ️ {unrecognizedNotice}
+            </div>
+          )}
 
           {/* Dynamic Mascot Guidance Card */}
           <MascotTipCard
