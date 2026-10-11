@@ -4,7 +4,39 @@ import { useTheme } from '../hooks/useTheme';
 export default function Navbar({ activeMode, onModeChange, backendHealth }) {
   const { theme, toggleTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isOnline, setIsOnline] = useState(() => (typeof navigator !== 'undefined' ? navigator.onLine : true));
   const navRef = useRef(null);
+
+  // Monitor PWA installability & network connectivity
+  useEffect(() => {
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   // Close mobile menu on resize to desktop (> 768px)
   useEffect(() => {
@@ -120,14 +152,42 @@ export default function Navbar({ activeMode, onModeChange, backendHealth }) {
           </a>
         </nav>
 
-        {/* Right Actions: Backend Status, Theme Toggle, CTA & Hamburger */}
+        {/* Right Actions: PWA Install, Connectivity Status, Theme Toggle, CTA & Hamburger */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {/* Live Backend Indicator */}
+          {/* PWA Install Button (renders when installable) */}
+          {deferredPrompt && (
+            <button
+              onClick={handleInstallClick}
+              className="badge badge-teal"
+              style={{
+                cursor: 'pointer',
+                padding: '6px 12px',
+                fontSize: '12px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+              title="Install SignBridge AI as a standalone desktop or mobile application"
+            >
+              <span>📲</span>
+              <span>Install App</span>
+            </button>
+          )}
+
+          {/* Live Backend / Offline Indicator */}
           <div
             className="badge nav-badge-status"
             style={{
-              borderColor: backendHealth?.status === 'ok' ? 'rgba(45, 214, 192, 0.4)' : 'rgba(255, 106, 91, 0.4)',
-              color: backendHealth?.status === 'ok' ? 'var(--teal)' : 'var(--mist)'
+              borderColor: !isOnline
+                ? 'rgba(246, 172, 63, 0.4)'
+                : backendHealth?.status === 'ok'
+                ? 'rgba(45, 214, 192, 0.4)'
+                : 'rgba(255, 106, 91, 0.4)',
+              color: !isOnline
+                ? 'var(--amber)'
+                : backendHealth?.status === 'ok'
+                ? 'var(--teal)'
+                : 'var(--mist)'
             }}
           >
             <span
@@ -135,10 +195,14 @@ export default function Navbar({ activeMode, onModeChange, backendHealth }) {
                 width: '6px',
                 height: '6px',
                 borderRadius: '50%',
-                backgroundColor: backendHealth?.status === 'ok' ? 'var(--teal)' : '#ff6a5b'
+                backgroundColor: !isOnline
+                  ? 'var(--amber)'
+                  : backendHealth?.status === 'ok'
+                  ? 'var(--teal)'
+                  : '#ff6a5b'
               }}
             />
-            {backendHealth?.status === 'ok' ? 'FastAPI Active' : 'Connecting...'}
+            {!isOnline ? 'Offline (Edge CV)' : backendHealth?.status === 'ok' ? 'FastAPI Active' : 'Connecting...'}
           </div>
 
           {/* Theme Toggle Button */}

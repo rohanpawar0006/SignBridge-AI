@@ -1,0 +1,40 @@
+{
+  "name": "SignBridge AI — Bridging Signs and Speech",
+  "short_name": "SignBridge AI",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#12141c",
+  "theme_color": "#12141c",
+  "description": "Bidirectional Indian Sign Language AI Communication Platform with on-device computer vision and continuous grammar translation.",
+  "orientation": "any",
+  "categories": ["education", "accessibility", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Live Conversation Mode",
+      "short_name": "Conversation",
+      "url": "/#demo",
+      "description": "Two-way duplex live conversation between signer and speaker"
+    },
+    {
+      "name": "Sign Practice Studio",
+      "short_name": "Practice",
+      "url": "/#practice",
+      "description": "Gamified learning and quiz challenge"
+    },
+    {
+      "name": "ISL Sign Dictionary",
+      "short_name": "Dictionary",
+      "url": "/#dictionary",
+      "description": "Explore 36 ISL signs with step-by-step handshape diagrams"
+    }
+  ]
+}
