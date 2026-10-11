@@ -16,6 +16,7 @@ Every engineering phase defined in [`files/Phases.md`](files/Phases.md) is fully
 | **Phase 4** | Frontend: Speech → Sign Pipeline | Bilingual speech recognition (`en-IN` / `hi-IN`), NLP tokenizer with synonym expansion, sequenced sign demonstration cards, 0.6x slow-mode toggle, repeat playback loop, and fingerspelling visual fallback. | ✅ **Verified** |
 | **Phase 5** | Landing Page & Full Integration | Zero-reload mode switching, signature animated traveling-pulse SVG bridge motif, Hero, Problem stats, How-it-works, duplex Live Conversation Mode, Practice Studio with mascot guides, and searchable ISL Dictionary. | ✅ **Verified** |
 | **Phase 6** | Verification & Documentation | Complete automated test suite (`test_backend.py`), zero-error production build (`npm run build`), comprehensive setup runbook (`SETUP.md`), and end-to-end verification walkthrough (`walkthrough.md`). | ✅ **Verified** |
+| **Future v2** | Continuous ISL Grammar Engine | Rule-augmented continuous ISL gloss-to-text grammar translation engine (OSV/SOV → SVO reordering, wh-fronting, polite imperatives, entity fingerspelling, bilingual Hindi) with active integration into Live Conversation Mode and Sentence Tray. | ✅ **Verified** |
 
 ---
 

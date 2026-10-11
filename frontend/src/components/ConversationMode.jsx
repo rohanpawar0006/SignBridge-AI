@@ -5,6 +5,7 @@ import { drawHandLandmarks } from '../utils/drawLandmarks';
 import { speechService } from '../services/speech';
 import { MotionSegmenter, GESTURE_STATES } from '../utils/motionSegmenter';
 import { tokenizeSentenceToISL, VOCABULARY_TRANSLATIONS } from '../utils/islDictionary';
+import { translateISLGloss } from '../utils/islGrammarEngine';
 import ClipPlayer from './ClipPlayer';
 
 const AUTO_SPEAK_PAUSE_MS = 2200;
@@ -210,23 +211,26 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
 
       const idleDuration = Date.now() - lastSignActionTimeRef.current;
       if (gestureState === GESTURE_STATES.IDLE && idleDuration >= AUTO_SPEAK_PAUSE_MS) {
-        const sentenceText = currentWords.map((w) => w.word).join(' ');
-        const hindiText = currentWords
-          .map((w) => VOCABULARY_TRANSLATIONS[w.word]?.hi || w.word)
-          .join(' ');
+        const rawGloss = currentWords.map((w) => w.word).join(' ');
+        const grammarRes = translateISLGloss(currentWords.map((w) => w.word));
+        const sentenceText = grammarRes.english;
+        const hindiText = grammarRes.hindi;
         
         const currentLang = speechLangRef.current;
         const spokenText = currentLang === 'hi-IN' ? hindiText : sentenceText;
         const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-        // Add to transcript
+        // Add to transcript with grammar metadata
         setTranscript((prev) => [
           ...prev,
           {
             id: `signer-${Date.now()}`,
             sender: 'signer',
+            rawGloss: rawGloss,
             text: sentenceText,
             translationHi: hindiText,
+            syntacticType: grammarRes.syntacticType,
+            ruleApplied: grammarRes.rule,
             confidence: currentWords[currentWords.length - 1]?.confidence,
             timestamp: timeStr
           }
@@ -1184,7 +1188,40 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
                     </span>
                   </div>
 
-                  {/* Message Content */}
+                  {/* Raw ISL Gloss & Syntactic Rule for Signer Turns */}
+                  {isSigner && msg.rawGloss && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '6px',
+                        marginBottom: '6px',
+                        fontSize: '11px',
+                        fontFamily: 'var(--font-mono)'
+                      }}
+                    >
+                      <span style={{ color: 'var(--mist)' }}>🤟 ISL Gloss:</span>
+                      <span className="badge badge-teal" style={{ fontSize: '10px', padding: '1px 6px' }}>
+                        {msg.rawGloss}
+                      </span>
+                      {msg.syntacticType && (
+                        <span
+                          style={{
+                            color: 'var(--amber)',
+                            fontSize: '10.5px',
+                            backgroundColor: 'rgba(246, 172, 63, 0.12)',
+                            padding: '1px 6px',
+                            borderRadius: '4px'
+                          }}
+                        >
+                          ⚡ {msg.syntacticType}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Message Content (Fluent English Translation) */}
                   <div
                     style={{
                       fontSize: '16px',
@@ -1198,7 +1235,7 @@ export default function ConversationMode({ vocabList = [], backendHealth }) {
 
                   {/* Hindi Translation Subtitle for Signer turns */}
                   {isSigner && msg.translationHi && (
-                    <div style={{ fontSize: '13px', color: 'var(--amber)', marginTop: '2px' }}>
+                    <div style={{ fontSize: '13px', color: 'var(--amber)', marginTop: '4px' }}>
                       🇮🇳 हिन्दी: {msg.translationHi}
                     </div>
                   )}

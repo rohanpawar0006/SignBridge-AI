@@ -213,6 +213,17 @@ Implemented in [frontend/src/utils/islDictionary.js](file:///d:/SignBridge%20AI/
 - Eliminates ISL non-manual grammatical filler words (`is`, `am`, `are`, `the`, `a`, `to`).
 - Out-of-vocabulary words automatically convert into letter-by-letter fingerspelling sequences.
 
+### ⚡ Continuous ISL Grammar Translation Engine (Roadmap Future v2)
+Implemented in [frontend/src/utils/islGrammarEngine.js](file:///d:/SignBridge%20AI/frontend/src/utils/islGrammarEngine.js):
+- **Linguistic Transformation**: While spoken English follows Subject-Verb-Object (SVO), Indian Sign Language naturally follows Object-Subject-Verb (OSV), Subject-Object-Verb (SOV), and Topic-Comment structures.
+- **Syntactic Rules Applied**:
+  1. **OSV/SOV to SVO Reordering**: Automatically flips topic-first signs (`WATER I WANT` $\to$ *"I want some water."*, `FOOD I WANT` $\to$ *"I would like some food."*).
+  2. **Polite Imperative Synthesis**: Reconstructs dropped verbs and pronouns (`WATER PLEASE` $\to$ *"Please give me some water."*, `HELP PLEASE` $\to$ *"Please help me."*).
+  3. **Wh-Interrogative Fronting**: Converts terminal topic question markers into standard interrogative clauses (`TIME` $\to$ *"What time is it now?"*, `NAME WHAT` $\to$ *"What is your name?"*).
+  4. **Fingerspelling Name Entity Synthesis**: Merges adjacent alphabet signs into named entities (`NAME R O H A N` $\to$ *"My name is Rohan."* / *"मेरा नाम Rohan है।"*).
+  5. **Bilingual Synthesis**: Translates simultaneously into fluent English and Hindi Devanagari.
+  6. **Linguistic Tagging**: Annotates the exact grammatical rule applied for academic viva transparency.
+
 ---
 
 ## 8. Core Interactive Modules & User Experiences

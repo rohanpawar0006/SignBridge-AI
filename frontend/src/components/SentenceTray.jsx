@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { speechService } from '../services/speech';
+import { translateISLGloss } from '../utils/islGrammarEngine';
 
 export default function SentenceTray({
   currentLetter,
@@ -10,13 +11,21 @@ export default function SentenceTray({
 }) {
   const [text, setText] = useState(externalSentence);
   const [autoAppend, setAutoAppend] = useState(true);
+  const [grammarMode, setGrammarMode] = useState(true); // Continuous ISL Grammar Engine toggle
   const [holdProgress, setHoldProgress] = useState(0);
   const [copied, setCopied] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [activeSpeechLang, setActiveSpeechLang] = useState('en-IN'); // 'en-IN' | 'hi-IN'
 
   const holdStartTimeRef = useRef(null);
   const lastAppendedLetterRef = useRef(null);
   const HOLD_DURATION_MS = 1200; // Hold steady for 1.2s to auto-append
+
+  // Continuous ISL Grammar Translation computed from raw token sequence
+  const grammarTranslation = useMemo(() => {
+    if (!text || !text.trim()) return null;
+    return translateISLGloss(text);
+  }, [text]);
 
   // Sync with externalSentence if controlled
   useEffect(() => {
@@ -105,10 +114,16 @@ export default function SentenceTray({
     }
   };
 
-  const handleSpeak = () => {
+  const handleSpeak = (lang = 'en-IN', useRaw = false) => {
     if (!text || isSpeaking) return;
-    speechService.speak(text, {
-      lang: 'en-IN',
+
+    let textToSpeak = text;
+    if (!useRaw && grammarTranslation) {
+      textToSpeak = lang === 'hi-IN' ? grammarTranslation.hindi : grammarTranslation.english;
+    }
+
+    speechService.speak(textToSpeak, {
+      lang: lang,
       onStart: () => setIsSpeaking(true),
       onEnd: () => setIsSpeaking(false)
     });
@@ -141,15 +156,37 @@ export default function SentenceTray({
           borderBottom: '1px solid var(--line)'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <span className="mono-eyebrow" style={{ color: 'var(--teal)' }}>
             Translated Sentence Tray
           </span>
           {text && (
             <span className="mono-data" style={{ fontSize: '11px', color: 'var(--mist)' }}>
-              ({text.length} chars, {wordCount} {wordCount === 1 ? 'word' : 'words'})
+              ({text.length} chars, {wordCount} {wordCount === 1 ? 'sign' : 'signs'})
             </span>
           )}
+          {/* ISL Grammar Mode Toggle Badge */}
+          <button
+            type="button"
+            onClick={() => setGrammarMode(!grammarMode)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '3px 10px',
+              borderRadius: 'var(--radius-pill)',
+              border: `1px solid ${grammarMode ? 'var(--teal)' : 'var(--line)'}`,
+              backgroundColor: grammarMode ? 'rgba(45, 214, 192, 0.12)' : 'transparent',
+              color: grammarMode ? 'var(--teal)' : 'var(--mist)',
+              fontSize: '11px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <span>⚡ ISL Grammar:</span>
+            <span>{grammarMode ? 'ON (SVO Reordering)' : 'OFF (Raw Gloss)'}</span>
+          </button>
         </div>
 
         {/* Auto Append Toggle */}
@@ -174,28 +211,39 @@ export default function SentenceTray({
         </label>
       </div>
 
-      {/* Main Text Display Field */}
+      {/* Main Raw Gloss Field */}
       <div
         style={{
-          minHeight: '84px',
-          padding: '16px',
+          minHeight: '74px',
+          padding: '14px 16px',
           borderRadius: 'var(--radius-md)',
           backgroundColor: 'var(--ink)',
           border: '1px solid var(--line)',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          gap: '10px'
+          gap: '8px'
         }}
       >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span className="mono-data" style={{ fontSize: '10.5px', color: 'var(--mist)' }}>
+            RAW ISL GLOSS SEQUENCE:
+          </span>
+          {text && (
+            <span className="badge" style={{ fontSize: '10px', padding: '2px 8px' }}>
+              ISL Input Stream
+            </span>
+          )}
+        </div>
+
         <div
           style={{
             fontFamily: 'var(--font-mono)',
-            fontSize: '18px',
+            fontSize: '17px',
             color: 'var(--white)',
             wordBreak: 'break-word',
             whiteSpace: 'pre-wrap',
-            lineHeight: 1.5
+            lineHeight: 1.4
           }}
         >
           {text ? (
@@ -205,7 +253,7 @@ export default function SentenceTray({
                 style={{
                   display: 'inline-block',
                   width: '3px',
-                  height: '18px',
+                  height: '17px',
                   backgroundColor: 'var(--teal)',
                   marginLeft: '4px',
                   verticalAlign: 'middle',
@@ -214,8 +262,8 @@ export default function SentenceTray({
               />
             </span>
           ) : (
-            <span style={{ color: 'var(--mist)', fontStyle: 'italic', fontSize: '14px', fontFamily: 'var(--font-body)' }}>
-              Form signs in camera view to build words and sentences here...
+            <span style={{ color: 'var(--mist)', fontStyle: 'italic', fontSize: '13.5px', fontFamily: 'var(--font-body)' }}>
+              Form signs in camera view or click the quick simulator buttons to assemble an ISL sequence...
             </span>
           )}
         </div>
@@ -227,7 +275,7 @@ export default function SentenceTray({
               display: 'flex',
               alignItems: 'center',
               gap: '10px',
-              paddingTop: '8px',
+              paddingTop: '6px',
               borderTop: '1px solid var(--line)'
             }}
           >
@@ -255,6 +303,82 @@ export default function SentenceTray({
           </div>
         )}
       </div>
+
+      {/* Continuous ISL Grammar Engine Live Translation Card */}
+      {grammarMode && grammarTranslation && text.trim() && (
+        <div
+          style={{
+            padding: '14px 16px',
+            borderRadius: 'var(--radius-md)',
+            backgroundColor: 'rgba(45, 214, 192, 0.05)',
+            border: '1px solid rgba(45, 214, 192, 0.25)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <span className="mono-eyebrow" style={{ color: 'var(--teal)', fontSize: '10.5px' }}>
+              ⚡ Continuous ISL Grammar Translation:
+            </span>
+            {grammarTranslation.syntacticType && (
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--amber)',
+                  backgroundColor: 'rgba(246, 172, 63, 0.12)',
+                  padding: '2px 8px',
+                  borderRadius: 'var(--radius-pill)',
+                  border: '1px solid rgba(246, 172, 63, 0.25)'
+                }}
+              >
+                {grammarTranslation.syntacticType}
+              </span>
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '10px' }}>
+            {/* English Fluent Sentence */}
+            <div
+              style={{
+                padding: '10px 14px',
+                backgroundColor: 'var(--ink)',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--line)'
+              }}
+            >
+              <div style={{ fontSize: '11px', color: 'var(--mist)', marginBottom: '3px' }}>
+                English (Fluent Grammar):
+              </div>
+              <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--white)' }}>
+                "{grammarTranslation.english}"
+              </div>
+            </div>
+
+            {/* Hindi Translation */}
+            <div
+              style={{
+                padding: '10px 14px',
+                backgroundColor: 'var(--ink)',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--line)'
+              }}
+            >
+              <div style={{ fontSize: '11px', color: 'var(--mist)', marginBottom: '3px' }}>
+                हिन्दी अनुवाद (Hindi):
+              </div>
+              <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--amber)' }}>
+                "{grammarTranslation.hindi}"
+              </div>
+            </div>
+          </div>
+
+          <div style={{ fontSize: '11.5px', color: 'var(--mist)', fontStyle: 'italic', marginTop: '2px' }}>
+            Linguistic Rule: {grammarTranslation.rule}
+          </div>
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div
@@ -305,14 +429,38 @@ export default function SentenceTray({
         </div>
 
         {/* Right Action Group (Speech & Clipboard) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
           <button
-            onClick={handleSpeak}
+            onClick={() => handleSpeak('en-IN', !grammarMode)}
             disabled={!text || isSpeaking}
             className="btn-primary"
-            style={{ padding: '8px 16px', fontSize: '12.5px', opacity: text && !isSpeaking ? 1 : 0.4 }}
+            style={{
+              padding: '8px 14px',
+              fontSize: '12.5px',
+              opacity: text && !isSpeaking ? 1 : 0.4,
+              backgroundColor: 'var(--teal)',
+              color: '#082520'
+            }}
           >
-            {isSpeaking ? '🔊 Speaking...' : '🔊 Speak'}
+            {isSpeaking && activeSpeechLang === 'en-IN' ? '🔊 Speaking...' : '🔊 Speak English'}
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveSpeechLang('hi-IN');
+              handleSpeak('hi-IN', false);
+            }}
+            disabled={!text || isSpeaking}
+            className="btn-primary"
+            style={{
+              padding: '8px 14px',
+              fontSize: '12.5px',
+              opacity: text && !isSpeaking ? 1 : 0.4,
+              backgroundColor: 'var(--amber)',
+              color: '#281a05'
+            }}
+          >
+            {isSpeaking && activeSpeechLang === 'hi-IN' ? '🗣️ बोल रहा है...' : '🗣️ हिन्दी बोलें'}
           </button>
 
           <button

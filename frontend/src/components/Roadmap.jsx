@@ -37,9 +37,9 @@ export default function Roadmap() {
     },
     {
       phase: 'Future v2',
-      title: 'Continuous ISL Grammar & Edge ML',
-      status: 'Upcoming',
-      desc: 'Continuous sentence grammar translation (Transformer-based gloss-to-text) and on-device WebGPU/TensorFlow.js acceleration.'
+      title: 'Continuous ISL Grammar Engine',
+      status: 'Completed',
+      desc: 'Rule-augmented continuous ISL gloss-to-text grammar translation (OSV/SOV → SVO reordering, wh-fronting, bilingual Hindi) active in Live Conversation & Sentence Tray.'
     }
   ];
 

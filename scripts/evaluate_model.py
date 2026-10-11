@@ -61,7 +61,7 @@ def evaluate():
     print(classification_report(all_targets, all_preds, target_names=VOCABULARY, digits=3))
 
     cm = confusion_matrix(all_targets, all_preds)
-    print("\n--- Confusion Matrix (11 Classes) ---")
+    print(f"\n--- Confusion Matrix ({len(VOCABULARY)} Classes) ---")
     print(cm)
     print("\n[Evaluation Complete]\n")
 
